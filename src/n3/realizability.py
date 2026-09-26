@@ -45,7 +45,8 @@ def _crossings(pre0, slope, thr, exclude):
 
 
 def exact_qp(Jeq, req, Jin, bin_, solver="CLARABEL"):
-    """min ||x||^2 s.t. Jeq x = req, Jin x <= bin.  Returns x or None."""
+    """min ||x||^2 s.t. Jeq x = req, Jin x <= bin.  Returns (x or None, status).
+    Only status 'infeasible' certifies infeasibility; other non-optimal statuses are 'undetermined'."""
     import cvxpy as cp
 
     d = Jeq.shape[1]
@@ -54,13 +55,19 @@ def exact_qp(Jeq, req, Jin, bin_, solver="CLARABEL"):
     if Jin is not None and Jin.shape[0]:
         cons.append(Jin @ x <= bin_)
     prob = cp.Problem(cp.Minimize(cp.sum_squares(x)), cons)
-    try:
-        prob.solve(solver=solver)
-    except Exception:
-        prob.solve(solver="OSQP", eps_abs=1e-9, eps_rel=1e-9, max_iter=200000)
-    if x.value is None or prob.status not in ("optimal", "optimal_inaccurate"):
-        return None, prob.status
-    return np.asarray(x.value), prob.status
+    status = "error"
+    for kw in (dict(solver=solver), dict(solver="OSQP", eps_abs=1e-9, eps_rel=1e-9, max_iter=200000)):
+        try:
+            prob.solve(**kw)
+            status = prob.status
+        except Exception as e:  # solver failure -> try fallback
+            status = f"error:{type(e).__name__}"
+            continue
+        if status in ("optimal", "infeasible"):
+            break
+    if x.value is None or status != "optimal":
+        return None, status
+    return np.asarray(x.value), status
 
 
 @torch.no_grad()
@@ -69,7 +76,8 @@ def analyze_position_affine(sae: SAEWrap, h: torch.Tensor, T: torch.Tensor, dT: 
                             add_per_round: int = 48) -> dict:
     """Exact finite-step analysis for norm='none' ReLU / JumpReLU SAEs at one position h (d,)."""
     assert sae.norm == "none" and sae.kind in ("relu", "jumprelu")
-    W = sae.W_enc.double().numpy()  # (d, m)
+    # effective encoder on residual edits: centred columns when the model/SAE are mean-invariant (GPT-2 jb)
+    W = sae.encoder_matrix().double().numpy()  # (d, m)
     pre = sae.pre(h.unsqueeze(0))[0].double().numpy()
     f = sae.encode(h.unsqueeze(0))[0].double().numpy()
     thr = np.zeros_like(pre) if sae.kind == "relu" else sae.threshold.double().numpy()
@@ -128,26 +136,30 @@ def analyze_position_affine(sae: SAEWrap, h: torch.Tensor, T: torch.Tensor, dT: 
             x = None
             break
         x = x_new
-    out["qp_status"] = status if (x is None or converged) else "max_rounds_not_converged"
+    out["qp_status"] = status if converged or x is None else "max_rounds_not_converged"
     out["qp_converged"] = bool(converged)
     out["qp_rounds"] = rounds
-    if x is None or not converged:
-        out["c_qp"] = float("inf") if x is None else float(np.linalg.norm(x))
-        out["qp_feasible"] = False if x is None else None  # None = undetermined (not converged)
+    if x is None:
+        out["c_qp"] = float("inf") if status == "infeasible" else float("nan")
+        out["qp_feasible"] = False if status == "infeasible" else None  # None = undetermined (solver status)
     else:
-        pre_x = pre + W.T @ x
-        f_x = sae.act_from_pre(torch.tensor(pre_x, dtype=torch.float32).unsqueeze(0))[0].double().numpy()
+        # final verification of the accepted point against ALL constraints with the true encoder
+        f_x = sae.encode(h.unsqueeze(0) + torch.tensor(x, dtype=torch.float32).unsqueeze(0))[0].double().numpy()
+        t_err = float(np.abs(f_x[Tn] - tau).max())
+        p_err = float(np.abs(f_x[A] - f[A]).max()) if len(A) else 0.0
+        n_new = int(((f_x > 0) & (f <= 0) & ~isT).sum())
+        tol = 1e-3 * max(1.0, float(np.abs(tau).max()))
+        verified = converged and t_err <= tol and p_err <= tol and n_new == 0
         out["c_qp"] = float(np.linalg.norm(x))
-        out["qp_feasible"] = True
+        out["qp_feasible"] = True if verified else None
         out["qp_n_ineq_working"] = int(len(work))
+        pre_x = pre + W.T @ x
         out["qp_n_binding"] = int((np.abs(pre_x[work] - (thr[work] - margin)) < 1e-4 * np.maximum(1, np.abs(thr[work]))).sum()) if len(work) else 0
-        # verify with the true (float32) encoder
-        out["qp_check_T_err"] = float(np.abs(f_x[Tn] - tau).max())
-        out["qp_check_P_err"] = float(np.abs(f_x[A] - f[A]).max()) if len(A) else 0.0
-        out["qp_check_new_active"] = int(((f_x > 0) & (f <= 0) & ~isT).sum())
-    out["qp_over_lin"] = out["c_qp"] / max(out["c_lin"], 1e-12)
+        out["qp_check_T_err"], out["qp_check_P_err"], out["qp_check_new_active"] = t_err, p_err, n_new
+    out["qp_over_lin"] = out["c_qp"] / max(out["c_lin"], 1e-12) if out.get("qp_feasible") else float("nan")
 
     # decoder steering: scale along dT until the (weighted) target is reached; collateral at that scale
+    dT = sae.canon(dT) if sae.center_input else dT
     dhat = dT.double().numpy() / np.linalg.norm(dT.numpy())
     gain = JT @ dhat  # pre-activation increase per unit norm, per target feature
     out["dec_gain_per_norm"] = gain.tolist()
@@ -163,7 +175,7 @@ def analyze_position_affine(sae: SAEWrap, h: torch.Tensor, T: torch.Tensor, dT: 
         out["c_dec"] = float("inf")
     out["enc_dec_cos"] = float((JT.sum(0) / np.linalg.norm(JT.sum(0))) @ dhat)
     if budget is not None:
-        out["qp_within_budget"] = bool(out["c_qp"] <= budget)
+        out["qp_within_budget"] = (bool(out["c_qp"] <= budget) if out["qp_feasible"] else (False if out["qp_feasible"] is False else None))
         out["lin_within_budget"] = bool(out["c_lin"] <= budget)
         out["dec_within_budget"] = bool(out["c_dec"] <= budget)
     return out
@@ -223,23 +235,39 @@ def analyze_position_topk_ln(sae: SAEWrap, h: torch.Tensor, T: torch.Tensor, dT:
     out["gn_T_reached"] = bool((f2[T] >= tau - 1e-3 * rT.abs()).all())
     out["gn_P_lost"] = int((f2[A] <= 0).sum())
     out["gn_new_active"] = int(((f2 > 0) & (f <= 0) & ~isT).sum())
+    dT = sae.canon(dT) if sae.center_input else dT
     dhat = (dT / dT.norm()).double()
-    gain = JT @ dhat.numpy()
     out["enc_dec_cos"] = float((JT.sum(0) / np.linalg.norm(JT.sum(0))) @ dhat.numpy())
-    if (gain > 0).all():
-        # first-order scale, then true-forward line search to reach target
-        c = float(np.max(rT.numpy() / gain))
-        for _ in range(30):
-            p3, f3 = true_eval(c * dhat.numpy())
-            if (p3[T] >= tau - 1e-6).all():
+    # decoder steering under the TRUE encoder (LN + top-k): smallest c along dhat such that every target is
+    # active with f_T >= tau (bracket by doubling from a small scale, then bisect).  No first-order shortcut.
+    def reached(c):
+        p3, f3 = true_eval(c * dhat.numpy())
+        return bool((f3[T] >= tau - 1e-6 * rT.abs().clamp_min(1)).all()), f3
+
+    c_hi, ok = 0.05 * float(hh.norm()), False
+    for _ in range(12):
+        ok, _ = reached(c_hi)
+        if ok:
+            break
+        c_hi *= 2.0
+    if ok:
+        c_lo = 0.0
+        for _ in range(40):
+            mid = 0.5 * (c_lo + c_hi)
+            if reached(mid)[0]:
+                c_hi = mid
+            else:
+                c_lo = mid
+            if c_hi - c_lo <= 1e-4 * c_hi:
                 break
-            c *= 1.25
-        out["c_dec"] = c if (p3[T] >= tau - 1e-6).all() else float("inf")
+        _, f3 = reached(c_hi)
+        out["c_dec"] = c_hi
         out["dec_P_rel_change"] = float((f3[A] - f[A]).norm() / f[A].norm().clamp_min(1e-9)) if len(A) else 0.0
         out["dec_P_lost"] = int((f3[A] <= 0).sum())
         out["dec_new_active"] = int(((f3 > 0) & (f <= 0) & ~isT).sum())
-    else:
+    else:  # not reachable within ~200x the residual norm
         out["c_dec"] = float("inf")
+        out["dec_P_rel_change"] = out["dec_P_lost"] = out["dec_new_active"] = float("nan")
     if budget is not None:
         out["lin_within_budget"] = bool(out["c_lin"] <= budget)
         out["dec_within_budget"] = bool(out["c_dec"] <= budget)

@@ -21,18 +21,22 @@ def acts():
 
 @pytest.fixture(scope="module")
 def relu_sae():
-    return load_sae("gpt2-small-res-jb", "blocks.6.hook_resid_pre")[0]
+    w = load_sae("gpt2-small-res-jb", "blocks.6.hook_resid_pre")[0]
+    w.center_input = True  # as in n3.settings for mean-invariant GPT-2
+    return w
 
 
 @pytest.fixture(scope="module")
 def topk_sae():
-    return load_sae("gpt2-small-resid-post-v5-32k", "blocks.5.hook_resid_post")[0]
+    w = load_sae("gpt2-small-resid-post-v5-32k", "blocks.5.hook_resid_post")[0]
+    w.center_input = True
+    return w
 
 
 def spec(method, T, alpha=40.0, **kw):
     T = torch.tensor(T)
     return EditSpec(method=method, T=T, wT=torch.ones(len(T)) / len(T), alpha=alpha,
-                    generic_dir=torch.randn(768), feat_scale=torch.ones(40000), **kw)
+                    generic_dir=torch.randn(768), feat_scale=None, **kw)
 
 
 @pytest.mark.parametrize("method", METHODS)
@@ -100,11 +104,23 @@ def test_ln_jacobian_matches_autograd(acts, topk_sae):
             assert torch.allclose(g, J[i, a], atol=1e-5, rtol=1e-3), (i, a, (g - J[i, a]).abs().max())
 
 
-def test_enc_is_encoder_row_for_relu(acts, relu_sae):
+def test_enc_is_centred_encoder_row_for_relu(acts, relu_sae):
     ed = Editor(relu_sae, spec("enc", [100], alpha=1.0))
     delta = ed(acts[:4])
     w = relu_sae.W_enc[:, 100]
+    w = w - w.mean()
     assert torch.allclose(delta, (w / w.norm()).expand(4, -1), atol=1e-5)
+
+
+@pytest.mark.parametrize("method", [m for m in METHODS if m != "none"])
+def test_deltas_are_mean_free_under_centering(method, acts, relu_sae):
+    delta = Editor(relu_sae, spec(method, [100, 2000], alpha=25.0))(acts[:16])
+    assert delta.mean(-1).abs().max() < 1e-4
+
+
+def test_centering_makes_sae_blind_to_mean(acts, relu_sae):
+    h = acts[:8]
+    assert torch.allclose(relu_sae.encode(h + 7.0), relu_sae.encode(h), atol=1e-4)
 
 
 def test_opt_under_inference_mode(acts, relu_sae):

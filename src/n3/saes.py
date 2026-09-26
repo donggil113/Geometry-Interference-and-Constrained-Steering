@@ -35,6 +35,11 @@ class SAEWrap:
     k: int | None = None
     hook: str = ""
     meta: dict = field(default_factory=dict)
+    # True when the model reading this site is invariant to the residual's mean component (GPT-2: every read goes
+    # through a LayerNorm) and the SAE was trained on mean-centred residuals.  The SAE then always sees the
+    # canonical state h - mean_d(h); without this, edits could "act" on the SAE through the all-ones direction,
+    # which the model ignores (for jb GPT-2 L6 every W_enc column has a large positive 1-component).
+    center_input: bool = False
 
     # ------------------------------------------------------------------ basics
     @property
@@ -86,6 +91,8 @@ class SAEWrap:
 
     # ------------------------------------------------------------------ encode
     def pre(self, h: torch.Tensor) -> torch.Tensor:
+        if self.center_input:
+            h = h - h.mean(dim=-1, keepdim=True)
         x, _ = self._normalize(h)
         if self.apply_b_dec_to_input:
             x = x - self.b_dec
@@ -109,6 +116,15 @@ class SAEWrap:
     def encode_full(self, h: torch.Tensor):
         p = self.pre(h)
         return p, self.act_from_pre(p)
+
+    def canon(self, h: torch.Tensor) -> torch.Tensor:
+        """The input the SAE actually sees (mean-centred if center_input)."""
+        return h - h.mean(dim=-1, keepdim=True) if self.center_input else h
+
+    def encoder_matrix(self) -> torch.Tensor:
+        """Effective (d, m) encoder matrix acting on residual edits (centred columns if center_input);
+        only meaningful for norm == 'none'."""
+        return self.W_enc - self.W_enc.mean(dim=0, keepdim=True) if self.center_input else self.W_enc
 
     def decode(self, f: torch.Tensor, h_for_stats: torch.Tensor | None = None) -> torch.Tensor:
         out = f @ self.W_dec + self.b_dec
@@ -145,6 +161,8 @@ class SAEWrap:
         safe = idx.clamp_min(0)
         W = self.W_enc.T[safe]  # (n, k, d)
         W = W * valid.unsqueeze(-1).to(W.dtype)
+        if self.center_input:
+            W = W - W.mean(dim=-1, keepdim=True)  # d/dh of w.(h - mean(h)) = C w
         if self.norm == "none":
             return W
         d = h.shape[-1]

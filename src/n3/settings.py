@@ -23,10 +23,15 @@ def _model(key):
     raise KeyError(key)
 
 
+MEAN_INVARIANT = {"gpt2_relu_jb_L6", "gpt2_topk_oai_L6"}  # GPT-2 reads the residual only through LayerNorms
+
+
 @lru_cache(maxsize=None)
 def _sae(name):
     pin = load_json(PINNED)["settings"][name]
-    return load_sae(pin["sae_release"], pin["sae_id"], name)[0]
+    w = load_sae(pin["sae_release"], pin["sae_id"], name)[0]
+    w.center_input = name in MEAN_INVARIANT
+    return w
 
 
 def load_setting(name: str):

@@ -19,7 +19,7 @@ dec_proj   : alpha * normalized (I - Pi_P) d_T                     (decoder dire
 opt        : direct activation optimization on the sphere ||delta|| = alpha of
              sum_t w_t pre_t(h+delta)/s_t - mu_P * mean_P ((pre_j(h+delta)-pre_j(h))/s_j)^2
                                            - mu_new * sum_{inactive j} relu(pre_j(h+delta) - thr_j(h) + margin)/s_j
-             over a candidate feature subset, initialised at the decoder direction.
+             with the full encoder, initialised at the (projected) decoder direction.
 diffmean   : alpha * normalized (mean h | concept - mean h | other concepts)   (generic baseline)
 random     : alpha * fixed random unit vector                                 (generic baseline)
 dec_rand_feat      : alpha * decoder row of a random SAE feature (privileged-direction control)
@@ -55,12 +55,11 @@ class EditSpec:
     ridge_rel: float = 1.0
     fs_rounds: int = 3
     fs_max_add: int = 64
-    opt_steps: int = 25
+    opt_steps: int = 20
     opt_lr: float = 0.08
     opt_mu_p: float = 1.0
     opt_mu_new: float = 1.0
     opt_margin: float = 0.0
-    opt_candidates: int = 512
     generic_dir: torch.Tensor | None = None  # (d,) for diffmean / random
     feat_scale: torch.Tensor | None = None  # (m,) typical activation scale for opt
     chunk: int = 256
@@ -113,21 +112,20 @@ def _project_out(J: torch.Tensor, v: torch.Tensor) -> torch.Tensor:
 class Editor:
     """Stateful editor: computes delta for a batch of positions and accumulates internal metrics."""
 
-    def __init__(self, sae: SAEWrap | None, spec: EditSpec, collect: bool = True):
+    def __init__(self, sae: SAEWrap | None, spec: EditSpec, collect: bool = True, center_delta: bool | None = None):
         self.sae = sae
         self.spec = spec
         self.collect = collect
+        # For mean-invariant models (GPT-2) edits are projected onto 1-perp *before* norm matching, so every
+        # method spends its whole norm budget on directions the model can see.
+        self.center_delta = bool(sae is not None and sae.center_input) if center_delta is None else center_delta
         self.stats = {k: 0.0 for k in ["n", "tgt_gain", "tgt_pre_gain", "p_rel_change", "p_lost", "new_active", "delta_norm",
                                        "fs_violations", "secs", "err_norm_ratio", "err_delta_frac", "n_constraints"]}
         self.T = spec.T
         self.wT = spec.wT
         if sae is not None:
-            self.d_T = (spec.wT.unsqueeze(-1) * sae.W_dec[spec.T]).sum(0)
-            # candidate features for `opt`: T + those whose pre-activation is most moved by dec / enc directions
-            if spec.method == "opt":
-                inter = (self.d_T @ sae.W_enc).abs() + ((sae.W_enc[:, spec.T] @ spec.wT) @ sae.W_enc).abs() / sae.W_enc.norm(dim=0).clamp_min(1e-6)
-                inter[spec.T] = float("inf")
-                self.cand = torch.topk(inter, k=min(spec.opt_candidates, sae.m)).indices
+            d_T = (spec.wT.unsqueeze(-1) * sae.W_dec[spec.T]).sum(0)
+            self.d_T = d_T - d_T.mean() if self.center_delta else d_T
 
     # ------------------------------------------------------------------ core
     def __call__(self, h: torch.Tensor) -> torch.Tensor:
@@ -150,6 +148,8 @@ class Editor:
             sae = self.sae
             pre, f = sae.encode_full(h)
             delta = self._sae_method(h, pre, f)
+        if self.center_delta and not (m == "none" or sp.alpha == 0):
+            delta = _normalize_rows(delta - delta.mean(-1, keepdim=True), sp.alpha)
         secs = time.perf_counter() - t0
         if self.collect:
             self._collect(h, delta, pre, f, secs)
@@ -241,52 +241,45 @@ class Editor:
         return torch.where(keep, r, torch.full_like(r, -1))
 
     def _opt(self, h, pre, f, Pidx):
+        """Projected-gradient ascent on the sphere ||delta|| = alpha using the *full* SAE encoder:
+        maximize weighted target pre-activation gain, penalize changes of active protected features and any
+        inactive feature crossing its (current) threshold.  For norm='none' SAEs the active-P linear constraints
+        are enforced exactly by projection; the inactive-set hinge is a penalty (cf. *_fs / exact QP)."""
         sp, sae = self.spec, self.sae
         n = h.shape[0]
-        cand = self.cand
-        scale = sp.feat_scale[cand] if sp.feat_scale is not None else torch.ones(len(cand))
-        scale = scale.clamp_min(1e-3)
-        is_T = torch.zeros(len(cand), dtype=torch.bool)
-        pos_T = torch.stack([(cand == t).nonzero()[0, 0] for t in self.T])
-        is_T[pos_T] = True
-        # protected = active at h (full encoder) restricted to candidates, or all active if norm-free
-        pre_c0 = pre[:, cand]
-        f_c0 = f[:, cand]
-        thr0 = sae.effective_threshold(pre)[:, cand]
-        activeP = (f_c0 > 0) & ~is_T
-        inactive = (f_c0 <= 0) & ~is_T
-        # protected features outside the candidate set are handled by an exact linear constraint for norm="none"
+        scale = (sp.feat_scale if sp.feat_scale is not None else torch.ones(sae.m)).clamp_min(1e-3)
+        isT = torch.zeros(sae.m, dtype=torch.bool)
+        isT[self.T] = True
+        wT_full = torch.zeros(sae.m)
+        wT_full[self.T] = self.wT
+        thr0 = sae.effective_threshold(pre)
+        activeP = ((f > 0) & ~isT).float()
+        inactive = ((f <= 0) & ~isT).float()
+        exact_P = sae.norm == "none"
         J_P = sae.pre_jacobian(h, Pidx)
-        u = _project_out(J_P, self.d_T.expand(n, -1).clone()) if sae.norm == "none" else self.d_T.expand(n, -1).clone()
-        u = u.clone().requires_grad_(True)
-        opt = torch.optim.Adam([u], lr=sp.opt_lr * float(u.detach().norm(dim=-1).mean()))
-        Wc = sae.W_enc[:, cand]
-        wT_c = torch.zeros(len(cand))
-        wT_c[pos_T] = self.wT
-        with torch.enable_grad():
-            for _ in range(sp.opt_steps):
-                delta = sp.alpha * u / u.norm(dim=-1, keepdim=True).clamp_min(1e-12)
-                if sae.norm == "none":
-                    delta = delta - _batched_min_norm(J_P, torch.einsum("nkd,nd->nk", J_P, delta))
-                    delta = sp.alpha * delta / delta.norm(dim=-1, keepdim=True).clamp_min(1e-12)
-                x, _ = sae._normalize(h + delta)
-                if sae.apply_b_dec_to_input:
-                    x = x - sae.b_dec
-                pre_c = x @ Wc + sae.b_enc[cand]
-                gain = ((pre_c - pre_c0) / scale * wT_c).sum(-1)
-                dp = ((pre_c - pre_c0) / scale) ** 2
-                pen_p = (dp * activeP).sum(-1) / activeP.sum(-1).clamp_min(1)
-                pen_new = (torch.relu(pre_c - thr0 + sp.opt_margin * scale) / scale * inactive).sum(-1)
-                loss = -(gain - sp.opt_mu_p * pen_p - sp.opt_mu_new * pen_new).sum()
-                opt.zero_grad()
-                loss.backward()
-                opt.step()
+
+        def feasible_dir(v):
+            if self.center_delta:
+                v = v - v.mean(-1, keepdim=True)
+            if exact_P:
+                v = v - _batched_min_norm(J_P, torch.einsum("nkd,nd->nk", J_P, v))
+            return sp.alpha * v / v.norm(dim=-1, keepdim=True).clamp_min(1e-12)
+
+        u = feasible_dir(self.d_T.expand(n, -1).clone()).detach().requires_grad_(True)
+        opt = torch.optim.Adam([u], lr=sp.opt_lr * sp.alpha)
+        for _ in range(sp.opt_steps):
+            delta = feasible_dir(u)
+            dpre = (sae.pre(h + delta) - pre) / scale
+            gain = (dpre * wT_full).sum(-1)
+            pen_p = (dpre ** 2 * activeP).sum(-1) / activeP.sum(-1).clamp_min(1)
+            over = torch.relu(pre + dpre * scale - thr0 + sp.opt_margin * scale) / scale
+            pen_new = (over * inactive).sum(-1)
+            loss = -(gain - sp.opt_mu_p * pen_p - sp.opt_mu_new * pen_new).sum()
+            opt.zero_grad()
+            loss.backward()
+            opt.step()
         with torch.no_grad():
-            delta = sp.alpha * u / u.norm(dim=-1, keepdim=True).clamp_min(1e-12)
-            if sae.norm == "none":
-                delta = delta - _batched_min_norm(J_P, torch.einsum("nkd,nd->nk", J_P, delta))
-                delta = _normalize_rows(delta, sp.alpha)
-        return delta.detach()
+            return feasible_dir(u).detach()
 
     # --------------------------------------------------------------- metrics
     @torch.no_grad()
@@ -316,8 +309,8 @@ class Editor:
         st["fs_violations"] += float(getattr(self, "_last_fs_viol", 0))
         st["n_constraints"] += float(getattr(self, "_last_n_constraints", 0.0)) * n
         # off-manifold / error-channel diagnostics: SAE error e(x) = x - dec(enc(x))
-        e0 = h - sae.decode(f, h)
-        e1 = (h + delta) - sae.decode(f2, h + delta)
+        e0 = sae.canon(h) - sae.decode(f, h)
+        e1 = sae.canon(h + delta) - sae.decode(f2, h + delta)
         st["err_norm_ratio"] += float((e1.norm(dim=-1) / e0.norm(dim=-1).clamp_min(1e-6)).sum())
         dn = delta.norm(dim=-1)
         st["err_delta_frac"] += float(torch.where(dn > 0, (e1 - e0).norm(dim=-1) / dn.clamp_min(1e-9), torch.zeros_like(dn)).sum())

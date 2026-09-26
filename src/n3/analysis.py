@@ -47,7 +47,7 @@ def per_prompt_frame(rows, scores, baseline_key) -> pd.DataFrame:
         base = dict(key=r["key"], setting=c["setting"], cid=c["cid"], family=fam, method=c["method"], alpha=c["alpha_mult"],
                     K=c["K"], protect_topm=c["protect_topm"], ridge_rel=c["ridge_rel"], fs_rounds=c["fs_rounds"],
                     opt_mu_p=c["opt_mu_p"], opt_mu_new=c["opt_mu_new"],
-                    dce=r["utility"]["dce"], kl=r["utility"]["kl"], **{f"int_{k}": v for k, v in r["internal"].items()},
+                    **{k: v for k, v in r["utility"].items() if k != "ce_clean"}, **{f"int_{k}": v for k, v in r["internal"].items()},
                     gen_secs=r["gen_secs"])
         for i in range(n):
             rec = dict(base, prompt=i, C=C[i], C0=C0[i], dC=C[i] - C0[i], dNLL=s["nll"][i] - b["nll"][i],
@@ -59,8 +59,9 @@ def per_prompt_frame(rows, scores, baseline_key) -> pd.DataFrame:
     return pd.DataFrame(recs)
 
 
-METRICS = ["C", "dC", "dNLL", "dRel", "protJS", "dDist2", "dce", "kl", "int_tgt_gain", "int_p_rel_change",
-           "int_new_active_per_pos", "int_ms_per_pos"]
+METRICS = ["C", "dC", "dNLL", "dRel", "protJS", "dDist2", "dce", "kl", "down_p_rel_drift", "down_new_active_per_pos", "nli",
+           "int_tgt_gain", "int_p_rel_change", "int_new_active_per_pos", "int_err_delta_frac", "int_err_norm_ratio",
+           "int_n_constraints", "int_ms_per_pos"]
 
 
 def condition_table(df: pd.DataFrame, by=("method", "alpha", "K")) -> pd.DataFrame:
@@ -105,5 +106,30 @@ def cluster_bootstrap_diff(df: pd.DataFrame, sel_a: dict, sel_b: dict, metric="d
         pi = rng.randint(0, npm, npm)
         boots[b] = np.nanmean(D[np.ix_(ci, pi)])
     lo, hi = np.percentile(boots, [2.5, 97.5])
-    return dict(est=est, lo=float(lo), hi=float(hi), n_concepts=nc, n_prompts=npm,
+    p_two = float(min(1.0, 2 * min((boots <= 0).mean(), (boots >= 0).mean())))
+    return dict(est=est, lo=float(lo), hi=float(hi), p_two_sided=p_two, n_concepts=nc, n_prompts=npm,
                 per_concept=dict(zip(cids, np.nanmean(D, 1).tolist())))
+
+
+def holm(pvals: dict, alpha=0.05) -> dict:
+    """Holm-Bonferroni step-down; returns {name: reject?}."""
+    items = sorted(pvals.items(), key=lambda kv: kv[1])
+    m = len(items)
+    out, still = {}, True
+    for i, (k, p) in enumerate(items):
+        still = still and (p <= alpha / (m - i))
+        out[k] = bool(still)
+    return out
+
+
+def interp_at_budget(tab_m: pd.DataFrame, budget: float, cost="dNLL", gain="dC") -> float:
+    """Linear interpolation of gain at cost == budget along a method's alpha curve (alpha=0 -> (0,0)).
+    Returns NaN if the curve never reaches the budget (reported, not imputed)."""
+    t = tab_m.sort_values("alpha")
+    xs = np.concatenate([[0.0], t[cost].values])
+    ys = np.concatenate([[0.0], t[gain].values])
+    for i in range(1, len(xs)):
+        if xs[i] >= budget:
+            x0, x1, y0, y1 = xs[i - 1], xs[i], ys[i - 1], ys[i]
+            return float(y0 + (y1 - y0) * (budget - x0) / (x1 - x0)) if x1 > x0 else float(y1)
+    return float("nan")
