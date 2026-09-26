@@ -72,7 +72,12 @@ proto = dict(
     dev_selected=best[["cfg", "K", "alpha", "dC", "dNLL", "dDist2", "dRel", "protJS", "dce"]].reset_index().to_dict("records"),
     h1_comparators=["dec", "enc", "diffmean", "random"], controls=controls, reference_methods=["prompt"],
     h1_rule=dict(test="exact concept-level sign-flip on per-concept mean dC differences", alpha=0.05, multiplicity="holm",
-                 require_bootstrap_lo_gt0=True, fluency_guard_max_dNLL_excess=0.10, deg_guard_min_dDist2_diff=-0.05,
+                 require_bootstrap_lo_gt0=True,
+                 # absolute guard: the primary must stay within the fluency budget on held-out data.  (A relative
+                 # guard vs comparators at their own dev-selected alphas was dropped before any held-out run: e.g.
+                 # random selects alpha=0.1 where it costs ~0 nats, so the relative guard would test tuning, not steering.)
+                 fluency_guard_primary_max_dNLL=B + 0.10, deg_guard_min_dDist2_diff=-0.05,
+                 norm_matched_secondary="every comparator also evaluated at the primary's alpha (reported, not part of GO)",
                  nli_concordance=True,
                  collateral=dict(vs="dec", protJS_max_excess=0.01, dce_max_excess=0.05, dRel_max_deficit=0.02)),
     h2=dict(outcome_method=prim, primary_diagnostic="c_qp_rel",
@@ -80,7 +85,9 @@ proto = dict(
             rule="supported iff |rho| >= 0.5, bootstrap CI excludes 0, and |rho| > max |rho| of baselines "
                  "(max_dec_cos, neighbor_density_03, log_density, enc_dec_cos, dC_diffmean); all 24 concepts on held-out prompts"),
     test_grids=dict(
-        primary=dict(setting="gpt2_relu_jb_L6", split="test", explicit=[explicit(m) for m in all_methods],
+        primary=dict(setting="gpt2_relu_jb_L6", split="test",
+                     explicit=[explicit(m) for m in all_methods] +
+                              [dict(explicit(m), alpha_mult=pa) for m in ["dec", "enc", "diffmean", "random"]],
                      pareto_methods=["dec", "diffmean", prim], pareto_alphas=alphas,
                      downstream=[7, "gpt2-small-res-jb", "blocks.8.hook_resid_pre"]),
         h2_dev_concepts_on_test_prompts=dict(setting="gpt2_relu_jb_L6", split="test",

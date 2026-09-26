@@ -69,7 +69,7 @@ for c in comps:
         holm_reject=rej[c],
         direction_positive=r["dC"]["est"] > 0,
         bootstrap_lo_gt0=(r["dC"]["lo"] > 0) if rule.get("require_bootstrap_lo_gt0", True) else True,
-        fluency_guard=r["dNLL"]["est"] <= rule["fluency_guard_max_dNLL_excess"],
+        fluency_guard=res["levels"][prim]["dNLL"] <= rule["fluency_guard_primary_max_dNLL"],
         degeneration_guard=r["dDist2"]["est"] >= rule["deg_guard_min_dDist2_diff"],
         nli_concordance=(r["nli"]["est"] > 0) if (rule.get("nli_concordance") and "nli" in r) else (not rule.get("nli_concordance")),
     )
@@ -84,6 +84,19 @@ res["checks"] = checks
 res["collateral_not_worse_than_" + col["vs"]] = bool(collateral_ok)
 res["H1_GO"] = bool(all(v["pass"] for v in checks.values()) and collateral_ok)
 
+# secondary (reported, not part of the rule): norm-matched comparison, every comparator at the primary's alpha
+nm = {}
+pa = proto["alpha_by_method"][prim]
+for c in comps:
+    fa = df[((df.cfg == proto["cfg_by_method"][prim]) & np.isclose(df.alpha, pa)) |
+            ((df.cfg == proto["cfg_by_method"][c]) & np.isclose(df.alpha, pa))]
+    try:
+        nm[c] = {mt: cluster_bootstrap_diff(fa, {"cfg": proto["cfg_by_method"][prim]}, {"cfg": proto["cfg_by_method"][c]}, metric=mt)
+                 for mt in ["dC", "dNLL", "dce", "protJS"]}
+    except ValueError as e:
+        nm[c] = {"error": str(e)}
+res["norm_matched_at_primary_alpha"] = nm
+
 # robustness (reported, not part of the rule): matched-fluency interpolation along alpha curves
 tab = condition_table(df)
 rob = {}
@@ -94,6 +107,10 @@ for m in [prim] + comps:
 res["matched_fluency_dC"] = rob
 save_json(res, ROOT / "results" / "analysis" / run / f"decision_{setting}.json")
 print(json.dumps({"H1_GO": res["H1_GO"], "checks": checks, "collateral_ok": bool(collateral_ok), "matched_fluency_dC": rob}, indent=1))
+for c, v in nm.items():
+    if "dC" in v:
+        print(f"[norm-matched alpha={pa}] {prim} - {c}: dC {v['dC']['est']:+.3f} [{v['dC']['lo']:+.3f}, {v['dC']['hi']:+.3f}] "
+              f"signflip p={v['dC']['p_signflip']:.4f}; dNLL {v['dNLL']['est']:+.3f}; dce {v['dce']['est']:+.3f}")
 for c in comps:
     r = res["comparisons"][c]["dC"]
     print(f"{prim} - {c}: dC {r['est']:+.3f} boot95 [{r['lo']:+.3f}, {r['hi']:+.3f}] signflip p={r['p_signflip']:.4f} "
