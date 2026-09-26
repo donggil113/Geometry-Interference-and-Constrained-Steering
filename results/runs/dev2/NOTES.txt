@@ -1,0 +1,1 @@
+2026-09-26: dev2 part b resumed accepting rows from code 3cf4a48c31c6 (differs only by behavior-neutral edits: runtime accounting, fingerprinting, entity-family plumbing, concept-text caching)

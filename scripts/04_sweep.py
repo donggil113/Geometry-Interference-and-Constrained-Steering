@@ -46,7 +46,10 @@ if grid.get("downstream"):  # independent internal readout: (capture layer, SAE 
     down = (lay, d_sae)
 out = ROOT / "results" / "runs" / run / f"{setting}__{split}{('__' + part) if part else ''}.jsonl"
 code = code_fingerprint()
-have = done_keys(out, code)
+accept = tuple(grid.get("accept_codes", []))
+if accept:
+    print("accepting rows from behavior-neutral code versions:", accept, flush=True)
+have = done_keys(out, code, accept)
 
 conds = [Condition(setting, concepts[0], "none", 0.0)]
 extra = grid.get("extra", {})

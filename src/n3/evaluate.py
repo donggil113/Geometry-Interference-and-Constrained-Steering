@@ -146,8 +146,9 @@ def code_fingerprint() -> str:
     return h.hexdigest()[:12]
 
 
-def done_keys(path: Path, fingerprint: str | None = None) -> set:
-    """Keys already present; refuses to resume a file produced by different library code."""
+def done_keys(path: Path, fingerprint: str | None = None, accept: tuple = ()) -> set:
+    """Keys already present; refuses to resume a file produced by different library code unless that code's
+    fingerprint is explicitly listed in `accept` (used only for documented behavior-neutral edits)."""
     if not path.exists():
         return set()
     keys = set()
@@ -159,7 +160,7 @@ def done_keys(path: Path, fingerprint: str | None = None) -> set:
                 r = json.loads(l)
             except json.JSONDecodeError:  # truncated last line of an interrupted run
                 continue
-            if fingerprint is not None and r.get("code") not in (None, fingerprint):
+            if fingerprint is not None and r.get("code") not in (None, fingerprint, *accept):
                 raise RuntimeError(f"{path} was produced by code {r.get('code')} != current {fingerprint}; use a new run name")
             keys.add(r["key"])
     return keys
