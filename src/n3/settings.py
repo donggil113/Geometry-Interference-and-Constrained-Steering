@@ -11,6 +11,11 @@ from .saes import load_sae
 @lru_cache(maxsize=None)
 def _model(key):
     if key == "gpt2":
+        # HF GPT-2, output of block 5 (== TL blocks.6.hook_resid_pre), mean-centred (== TL center_writing_weights)
+        pin = load_json(PINNED)["settings"]["gpt2_relu_jb_L6"]
+        return HFModel("openai-community/gpt2", revision=pin["model_revision"], layer=5, center=True, manual_bos=True,
+                       hook_name="transformer.h.5.output (centred) == blocks.6.hook_resid_pre")
+    if key == "gpt2_tl":
         return TLModel("gpt2", hook="blocks.6.hook_resid_pre")
     if key == "gemma3_270m":
         pin = load_json(PINNED)["settings"]["gemma3_270m_jumprelu_L12"]

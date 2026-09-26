@@ -19,10 +19,15 @@ import torch
 Editor = Callable[[torch.Tensor], torch.Tensor]
 
 
+class _StopForward(Exception):
+    pass
+
+
 class _EditState:
-    def __init__(self, editor: Editor | None, skip_bos: bool = True):
+    def __init__(self, editor: Editor | None, skip_bos: bool = True, center: bool = False):
         self.editor = editor
         self.skip_bos = skip_bos
+        self.center = center
         self.calls = 0
 
     def apply(self, x: torch.Tensor) -> torch.Tensor:
@@ -34,6 +39,8 @@ class _EditState:
         if s - start <= 0:
             return x
         h = x[:, start:, :].reshape(-1, d).float()
+        if self.center:  # TransformerLens center_writing_weights coordinates (see HFModel)
+            h = h - h.mean(-1, keepdim=True)
         delta = self.editor(h).to(x.dtype).reshape(b, s - start, d)
         x = x.clone()
         x[:, start:, :] = x[:, start:, :] + delta
@@ -90,25 +97,45 @@ class TLModel:
 
 
 class HFModel:
+    """Hugging Face causal LM with an edit hook on the output of decoder block `layer`.
+
+    GPT-2: `layer=5` output == TransformerLens blocks.6.hook_resid_pre.  With `center=True` the hook
+    sees h - mean_d(h), which equals the TransformerLens residual under center_writing_weights=True
+    (every write to the stream is mean-centred there); the mean component of the stream is removed by
+    every downstream LayerNorm, so adding delta to the raw HF stream is behaviorally identical.
+    """
     backend = "hf"
 
-    def __init__(self, repo: str, revision: str, layer: int):
+    def __init__(self, repo: str, revision: str, layer: int, center: bool = False, manual_bos: bool = False,
+                 hook_name: str | None = None):
         from transformers import AutoModelForCausalLM, AutoTokenizer
 
         self.name = repo
         self.tokenizer = AutoTokenizer.from_pretrained(repo, revision=revision)
+        if self.tokenizer.pad_token_id is None:
+            self.tokenizer.pad_token = self.tokenizer.eos_token
         self.model = AutoModelForCausalLM.from_pretrained(repo, revision=revision, dtype=torch.float32)
         self.model.eval()
         self.layer = layer
-        self.hook = f"model.layers.{layer}.output"
+        self.center = center
+        self.manual_bos = manual_bos
+        self.hook = hook_name or f"model.layers.{layer}.output"
         self.bos_id = self.tokenizer.bos_token_id
 
     def to_tokens(self, texts, prepend_bos=True, max_len=None):
-        enc = self.tokenizer(texts, return_tensors="pt", padding=True, add_special_tokens=prepend_bos)
-        toks = enc["input_ids"]
+        if self.manual_bos:
+            ids = [([self.bos_id] if prepend_bos else []) + self.tokenizer(t)["input_ids"] for t in texts]
+            L = max(len(x) for x in ids)
+            assert all(len(x) == L for x in ids) or len(ids) == 1, "manual-BOS batches must have equal lengths"
+            toks = torch.tensor(ids)
+        else:
+            enc = self.tokenizer(texts, return_tensors="pt", padding=True, add_special_tokens=prepend_bos)
+            toks = enc["input_ids"]
         return toks if max_len is None else toks[:, :max_len]
 
     def _layer_module(self):
+        if hasattr(self.model, "transformer"):  # GPT-2
+            return self.model.transformer.h[self.layer]
         return self.model.model.layers[self.layer]
 
     @torch.no_grad()
@@ -117,17 +144,21 @@ class HFModel:
 
         def fn(mod, inp, out):
             store["h"] = (out[0] if isinstance(out, tuple) else out).detach()
+            raise _StopForward  # skip the remaining layers and the unembedding
 
         hnd = self._layer_module().register_forward_hook(fn)
         try:
             self.model(tokens)
+        except _StopForward:
+            pass
         finally:
             hnd.remove()
-        return store["h"]
+        h = store["h"]
+        return h - h.mean(-1, keepdim=True) if self.center else h
 
     @contextlib.contextmanager
     def editing(self, editor: Editor | None, skip_bos: bool = True):
-        st = _EditState(editor, skip_bos)
+        st = _EditState(editor, skip_bos, center=self.center)
 
         def fn(mod, inp, out):
             if isinstance(out, tuple):

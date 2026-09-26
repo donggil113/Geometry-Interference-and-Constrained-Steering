@@ -35,7 +35,8 @@ for t in owt_texts("utility"):
     if len(util) == 16:
         break
 util_tokens = torch.stack(util)
-out = ROOT / "results" / "runs" / run / f"{setting}__{split}.jsonl"
+part = grid.get("part", "")
+out = ROOT / "results" / "runs" / run / f"{setting}__{split}{('__' + part) if part else ''}.jsonl"
 have = done_keys(out)
 
 conds = [Condition(setting, concepts[0], "none", 0.0)]
