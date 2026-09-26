@@ -98,7 +98,19 @@ def concept_by_id(cid):
 
 
 def concept_texts(n_per_concept=300, seed=0):
-    """Train-split texts per concept (used for feature selection and DiffMean only)."""
+    """Train-split texts per concept (used for feature selection and DiffMean only).  Cached to a small JSON
+    after the first (memory-hungry) sampling so later jobs never load the full datasets."""
+    cache = ROOT / "results" / "cache" / f"concept_texts_n{n_per_concept}_s{seed}.json"
+    if cache.exists():
+        out = load_json(cache)
+        if all(c["cid"] in out for c in all_concepts()):
+            return out
+    out = _concept_texts_uncached(n_per_concept, seed)
+    save_json(out, cache)
+    return out
+
+
+def _concept_texts_uncached(n_per_concept=300, seed=0):
     rng = np.random.RandomState(seed)
     out = {}
     y = load_df("yahoo_train0")

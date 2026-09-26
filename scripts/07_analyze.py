@@ -22,7 +22,11 @@ frames = []
 for path in sorted(rdir.glob("*.jsonl")):
     if path.name.endswith(".scores.jsonl"):
         continue
-    rows = load_rows(path)
+    rows, seen = [], set()
+    for r in load_rows(path):  # de-duplicate by condition key (identical deterministic re-runs); keep first
+        if r["key"] not in seen:
+            seen.add(r["key"])
+            rows.append(r)
     sp = path.with_suffix(".scores.jsonl")
     if not sp.exists():
         print("unscored", path.name)

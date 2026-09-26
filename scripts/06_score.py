@@ -18,7 +18,11 @@ judges = load_judges(nli=nli)
 for path in sorted((ROOT / "results" / "runs" / run).glob("*.jsonl")):
     if path.name.endswith(".scores.jsonl"):
         continue
-    rows = load_rows(path)
+    rows, seen = [], set()
+    for r in load_rows(path):
+        if r["key"] not in seen:
+            seen.add(r["key"])
+            rows.append(r)
     prompts = rows[0]["prompts"]
     scored = path.with_suffix(".scores.jsonl")
     s = score_rows(rows, prompts, judges, scored, use_nli=nli)
