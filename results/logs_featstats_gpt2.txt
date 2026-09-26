@@ -1,0 +1,42 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/148 [00:00<?, ?it/s]Loading weights: 100%|██████████| 148/148 [00:00<00:00, 3371.99it/s]
+Loaded pretrained model gpt2 into HookedTransformer
+/home/user/Geometry-Interference-and-Constrained-Steering/.venv/lib/python3.11/site-packages/sae_lens/saes/sae.py:254: UserWarning: 
+This SAE has non-empty model_from_pretrained_kwargs. 
+For optimal performance, load the model like so:
+model = HookedSAETransformer.from_pretrained_no_processing(..., **cfg.model_from_pretrained_kwargs)
+  warnings.warn(
+stats gpt2_relu_jb_L6 topic:0 torch.Size([300, 24576])
+stats gpt2_relu_jb_L6 topic:1 torch.Size([300, 24576])
+stats gpt2_relu_jb_L6 topic:2 torch.Size([300, 24576])
+stats gpt2_relu_jb_L6 topic:3 torch.Size([300, 24576])
+stats gpt2_relu_jb_L6 topic:4 torch.Size([300, 24576])
+stats gpt2_relu_jb_L6 topic:5 torch.Size([300, 24576])
+stats gpt2_relu_jb_L6 topic:6 torch.Size([300, 24576])
+stats gpt2_relu_jb_L6 topic:7 torch.Size([300, 24576])
+stats gpt2_relu_jb_L6 topic:8 torch.Size([300, 24576])
+stats gpt2_relu_jb_L6 topic:9 torch.Size([300, 24576])
+stats gpt2_relu_jb_L6 emotion:0 torch.Size([300, 24576])
+stats gpt2_relu_jb_L6 emotion:1 torch.Size([300, 24576])
+stats gpt2_relu_jb_L6 emotion:2 torch.Size([300, 24576])
+stats gpt2_relu_jb_L6 emotion:3 torch.Size([300, 24576])
+stats gpt2_relu_jb_L6 emotion:4 torch.Size([300, 24576])
+stats gpt2_relu_jb_L6 emotion:5 torch.Size([300, 24576])
+gpt2_relu_jb_L6 done 184s median norm 78.93502807617188
+stats gpt2_topk_oai_L6 topic:0 torch.Size([300, 32768])
+stats gpt2_topk_oai_L6 topic:1 torch.Size([300, 32768])
+stats gpt2_topk_oai_L6 topic:2 torch.Size([300, 32768])
+stats gpt2_topk_oai_L6 topic:3 torch.Size([300, 32768])
+stats gpt2_topk_oai_L6 topic:4 torch.Size([300, 32768])
+stats gpt2_topk_oai_L6 topic:5 torch.Size([300, 32768])
+stats gpt2_topk_oai_L6 topic:6 torch.Size([300, 32768])
+stats gpt2_topk_oai_L6 topic:7 torch.Size([300, 32768])
+stats gpt2_topk_oai_L6 topic:8 torch.Size([300, 32768])
+stats gpt2_topk_oai_L6 topic:9 torch.Size([300, 32768])
+stats gpt2_topk_oai_L6 emotion:0 torch.Size([300, 32768])
+stats gpt2_topk_oai_L6 emotion:1 torch.Size([300, 32768])
+stats gpt2_topk_oai_L6 emotion:2 torch.Size([300, 32768])
+stats gpt2_topk_oai_L6 emotion:3 torch.Size([300, 32768])
+stats gpt2_topk_oai_L6 emotion:4 torch.Size([300, 32768])
+stats gpt2_topk_oai_L6 emotion:5 torch.Size([300, 32768])
+gpt2_topk_oai_L6 done 2165s median norm 78.93502807617188

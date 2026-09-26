@@ -1,0 +1,132 @@
+{
+  "seed": 20260926,
+  "concepts": {
+    "topic": {
+      "dev": [
+        "topic:2",
+        "topic:3",
+        "topic:5",
+        "topic:6",
+        "topic:7"
+      ],
+      "test": [
+        "topic:0",
+        "topic:1",
+        "topic:4",
+        "topic:8",
+        "topic:9"
+      ]
+    },
+    "emotion": {
+      "dev": [
+        "emotion:1",
+        "emotion:4",
+        "emotion:5"
+      ],
+      "test": [
+        "emotion:0",
+        "emotion:2",
+        "emotion:3"
+      ]
+    }
+  },
+  "prompts": {
+    "dev": [
+      "The Victorians had a very peculiar tradition of picnicking",
+      "Control of Palestinian movement has been a feature of Israel's occupation",
+      "Tehran: Ahead of Prime Minister Narendra Modi\u2019s",
+      "A new study has shown a link between low intelligence and people",
+      "The prime minister has come under pressure to act against Britain's",
+      "Given such a singular vintage, it may be hard to draw",
+      "Two Florida girls, one 13 and one 14, have had",
+      "A Saturday Night Kind of Pink \u2013 Houndmouth returns home for",
+      "For years, Andreas struggled to let go of the childhood physical",
+      "Industrial tech giants HP and Siemens have partnered to develop",
+      "Image copyright Reuters Image caption The murder of Kim Jong-nam",
+      "[Update Below] Teens have long been dedicated to wre",
+      "Lawrence Casler, of the State University of New York",
+      "The flags at Wrigley are raised and lowered on a",
+      "The strong scent of barbecue floats in the air as Big 12",
+      "Intel introduced \"Intel Data Protection Technology for Transactions\" to get",
+      "A senior Iranian leader threatened to capture and hold 1,000",
+      "In the last few years, water ice and salts capable of",
+      "Soldiers of the People's Liberation Army of China at Tian",
+      "Whiskey lovers are more full of it than they seem",
+      "Microsoft is integrating Skype directly into Windows 10, and the result",
+      "Google\u2019s bid to connect the world with its services",
+      "The Swedish Liberal party\u2019s youth wing proposed legalizing nec",
+      "The country witnessed a momentous occasion after the Rajya Sabha"
+    ],
+    "test": [
+      "With the Ukrainian economy in a tailspin, ordinary Ukrainians now",
+      "From the strange to the serene, here are some last",
+      "Get the biggest daily stories by email Subscribe Thank you for subscribing",
+      "COLORADO SPRINGS, Colo. \u2014 USA Hockey announced",
+      "Image caption The body was found in a chimney at Moody",
+      "The fact that it doesn't support T-Mobile's 2100",
+      "It\u2019s hard to anticipate every health problem that might",
+      "The debut album by the London duo of vocalist/ly",
+      "Voters cast their ballots at a polling station during general elections",
+      "Tomorrow, the Office of Public Engagement at the White House",
+      "NEW DELHI: Despite voluntary organizations receiving over Rs 11,",
+      "Android is one of the most popular mobile operating systems (and",
+      "Searchers are scouring Lemon Creek area for a Juneau",
+      "In a new development in Tesla\u2019s direct sales battle",
+      "Early voting started here in Florida today and voters are turning out",
+      "Michael Bisping has yet to face a No. 1",
+      "\u201cI depart, but the State shall always remain\ufffd",
+      "Apple's App Store today reached 25 billion downloads since its inception",
+      "On the campaign trail, Donald Trump promised to rip up the",
+      "An 18-year-old Ottawa woman who led an operation",
+      "OSAKA, Japan / PALO ALTO, Calif",
+      "The reveal of 2016\u2019s The Black List today doesn",
+      "James Bass is a Texas transportation veteran, but in his new",
+      "The head of Ontario's securities watchdog says its new whistleblower program",
+      "LAGUNA NIGUEL \u2013 Local and federal",
+      "User Info: Samsaric_Spiral Sam",
+      "Writers Cited in Breivik Manifesto Have Sp",
+      "Society says that once a woman becomes a wife, has",
+      "Disclaimer: This is an opinion piece. I understand everyone has",
+      "Turkey intends to open an embassy in East Jerusalem, President Recep",
+      "I complain a lot on this blog about traditional approaches to teaching",
+      "On November 24, 2016, Tokyo received its first November snow",
+      "How come Christians don\u2019t talk about Genesis 38 the",
+      "Manitoba drivers who hit and kill a cyclist often end",
+      "While Falcom are a more niche team then most other JR",
+      "We suggest that signal convergence between the sexes may reflect strong selective",
+      "SAN ANTONIO (KABB) -- Former DEA",
+      "Despite the damage to its reputation, Shell insists on continuing its",
+      "Donald Tusk has appeared to blame the UK electorate for causing",
+      "Manama: A recruitment company has waded into controversy and",
+      "At the start of the first world war, razor-sharp",
+      "WALTHAM, Mass. -- Boston Celtics second-year",
+      "\u201cWe expect the Colorado Rapids match on Saturday night against",
+      "\u00a9- @TL_Peanuts\u200b \u00a9- @TL",
+      "Andrew Cohen, PhD (right) and Eric Wait (left",
+      "How much water does a camel's hump hold? None.",
+      "*EDIT* Stable 86 is taken! Stable is",
+      "Jeffrey Scott Buckley (November 17, 1966 \u2013 May 29"
+    ]
+  },
+  "prompt_tokens": 12,
+  "dev_concepts": [
+    "topic:2",
+    "topic:3",
+    "topic:5",
+    "topic:6",
+    "topic:7",
+    "emotion:1",
+    "emotion:4",
+    "emotion:5"
+  ],
+  "test_concepts": [
+    "topic:0",
+    "topic:1",
+    "topic:4",
+    "topic:8",
+    "topic:9",
+    "emotion:0",
+    "emotion:2",
+    "emotion:3"
+  ]
+}

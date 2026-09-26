@@ -16,6 +16,9 @@ DATA_FILES = {
     "pile10k": ("NeelNanda/pile-10k", "127bfedcd5047750df5ccf3a12979a47bfa0bafa", "data/train-00000-of-00001-4746b8785c874cc7.parquet"),
     "emotion_train": ("dair-ai/emotion", "cab853a1dbdf4c42c2b3ef2173804746df8825fe", "split/train-00000-of-00001.parquet"),
     "yahoo_train0": ("community-datasets/yahoo_answers_topics", "6652a1e7c94f7260a0bfd0c9092dd48e2d536ea1", "yahoo_answers_topics/train-00000-of-00002.parquet"),
+    # test splits: used only to validate the behavioral judges
+    "yahoo_test": ("community-datasets/yahoo_answers_topics", "6652a1e7c94f7260a0bfd0c9092dd48e2d536ea1", "yahoo_answers_topics/test-00000-of-00001.parquet"),
+    "emotion_test": ("dair-ai/emotion", "cab853a1dbdf4c42c2b3ef2173804746df8825fe", "split/test-00000-of-00001.parquet"),
 }
 
 
