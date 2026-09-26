@@ -22,6 +22,9 @@ opt        : direct activation optimization on the sphere ||delta|| = alpha of
              over a candidate feature subset, initialised at the decoder direction.
 diffmean   : alpha * normalized (mean h | concept - mean h | other concepts)   (generic baseline)
 random     : alpha * fixed random unit vector                                 (generic baseline)
+dec_rand_feat      : alpha * decoder row of a random SAE feature (privileged-direction control)
+dec_proj_randP     : like dec_proj but the protected rows are replaced by an equal number (per position) of
+dec_proj_fs_randP    uniformly random features' rows (specificity control for the protected set / FS additions)
 
 P (protected set) at each position = features active at h, excluding T (optionally the top-m by activation).
 All Jacobians are of *pre-activations*, which are affine in h for norm="none" SAEs (ReLU / JumpReLU) and
@@ -36,7 +39,9 @@ import torch
 
 from .saes import SAEWrap
 
-METHODS = ["none", "dec", "enc", "pinv", "ridge", "dec_proj", "pinv_fs", "dec_proj_fs", "opt", "diffmean", "random"]
+METHODS = ["none", "dec", "enc", "pinv", "ridge", "dec_proj", "pinv_fs", "dec_proj_fs", "opt", "diffmean", "random",
+           "dec_rand_feat", "dec_proj_randP", "dec_proj_fs_randP"]
+GENERIC_DIR = {"diffmean", "random", "dec_rand_feat"}  # fixed direction supplied via EditSpec.generic_dir
 SAE_FREE = {"none", "diffmean", "random"}
 
 
@@ -112,7 +117,8 @@ class Editor:
         self.sae = sae
         self.spec = spec
         self.collect = collect
-        self.stats = {k: 0.0 for k in ["n", "tgt_gain", "tgt_pre_gain", "p_rel_change", "p_lost", "new_active", "delta_norm", "fs_violations", "secs"]}
+        self.stats = {k: 0.0 for k in ["n", "tgt_gain", "tgt_pre_gain", "p_rel_change", "p_lost", "new_active", "delta_norm",
+                                       "fs_violations", "secs", "err_norm_ratio", "err_delta_frac", "n_constraints"]}
         self.T = spec.T
         self.wT = spec.wT
         if sae is not None:
@@ -137,7 +143,7 @@ class Editor:
         if m == "none" or sp.alpha == 0:
             delta = torch.zeros_like(h)
             pre = f = None
-        elif m in ("diffmean", "random"):
+        elif m in GENERIC_DIR:
             delta = _normalize_rows(sp.generic_dir.expand_as(h).clone(), sp.alpha)
             pre = f = None
         else:
@@ -165,11 +171,17 @@ class Editor:
         Pidx = _protected_idx(sae, pre, f, self.T, sp.protect_topm)
         if m in ("pinv", "ridge", "pinv_fs"):
             rounds = sp.fs_rounds if m == "pinv_fs" else 0
-            return self._solve_iter(h, pre, f, Pidx, rounds, lambda J_P: self._pinv_dir(J_T, J_P, ridge=(m == "ridge")))
+            return self._solve_iter(h, pre, f, Pidx, rounds, lambda J_P: self._pinv_dir(J_T, J_P, ridge=(m == "ridge")))[0]
         if m in ("dec_proj", "dec_proj_fs"):
             rounds = sp.fs_rounds if m == "dec_proj_fs" else 0
             dT = self.d_T.expand(n, -1)
-            return self._solve_iter(h, pre, f, Pidx, rounds, lambda J_P: _project_out(J_P, dT))
+            return self._solve_iter(h, pre, f, Pidx, rounds, lambda J_P: _project_out(J_P, dT))[0]
+        if m in ("dec_proj_randP", "dec_proj_fs_randP"):
+            rounds = sp.fs_rounds if m == "dec_proj_fs_randP" else 0
+            dT = self.d_T.expand(n, -1)
+            _, idx = self._solve_iter(h, pre, f, Pidx, rounds, lambda J_P: _project_out(J_P, dT))
+            ridx = self._random_like(idx)
+            return _normalize_rows(_project_out(sae.pre_jacobian(h, ridx), dT), sp.alpha)
         if m == "opt":
             # generation runs under torch.inference_mode(); autograd needs ordinary tensors
             with torch.inference_mode(False), torch.enable_grad():
@@ -211,7 +223,22 @@ class Editor:
             v = (f_new > 0) & (f <= 0)
             v[:, self.T] = False
             self._last_fs_viol = int(v.sum())
-        return delta
+        self._last_n_constraints = float((idx >= 0).sum(-1).float().mean())
+        return delta, idx
+
+    def _random_like(self, idx):
+        """Same number of constraint rows per position, but uniformly random non-target features."""
+        if not hasattr(self, "_rng"):
+            self._rng = torch.Generator().manual_seed(4242 + int(self.T.sum()))
+        n, k = idx.shape
+        counts = (idx >= 0).sum(-1)
+        r = torch.randint(0, self.sae.m, (n, k), generator=self._rng)
+        bad = torch.isin(r, self.T)
+        while bool(bad.any()):
+            r[bad] = torch.randint(0, self.sae.m, (int(bad.sum()),), generator=self._rng)
+            bad = torch.isin(r, self.T)
+        keep = torch.arange(k)[None, :] < counts[:, None]
+        return torch.where(keep, r, torch.full_like(r, -1))
 
     def _opt(self, h, pre, f, Pidx):
         sp, sae = self.spec, self.sae
@@ -287,6 +314,13 @@ class Editor:
         newly[:, self.T] = False
         st["new_active"] += float(newly.sum())
         st["fs_violations"] += float(getattr(self, "_last_fs_viol", 0))
+        st["n_constraints"] += float(getattr(self, "_last_n_constraints", 0.0)) * n
+        # off-manifold / error-channel diagnostics: SAE error e(x) = x - dec(enc(x))
+        e0 = h - sae.decode(f, h)
+        e1 = (h + delta) - sae.decode(f2, h + delta)
+        st["err_norm_ratio"] += float((e1.norm(dim=-1) / e0.norm(dim=-1).clamp_min(1e-6)).sum())
+        dn = delta.norm(dim=-1)
+        st["err_delta_frac"] += float(torch.where(dn > 0, (e1 - e0).norm(dim=-1) / dn.clamp_min(1e-9), torch.zeros_like(dn)).sum())
 
     def summary(self) -> dict:
         st = self.stats
@@ -300,4 +334,8 @@ class Editor:
             "new_active_per_pos": st["new_active"] / n,
             "delta_norm": st["delta_norm"] / n,
             "ms_per_pos": 1000 * st["secs"] / n,
+            "err_norm_ratio": st["err_norm_ratio"] / n,
+            "err_delta_frac": st["err_delta_frac"] / n,
+            "n_constraints": st["n_constraints"] / n,
+            "fs_violations_total": st["fs_violations"],
         }

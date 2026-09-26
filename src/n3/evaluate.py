@@ -50,6 +50,12 @@ def build_editor(sae, stats, cond: Condition, collect=True) -> Editor:
         gen = diffmean_dir(stats, cond.cid)
     elif cond.method == "random":
         gen = random_dir(sae.d, cond.cid)
+    elif cond.method == "dec_rand_feat":
+        # decoder row of a random feature with the same density band as typical selected features
+        g = torch.Generator().manual_seed(777 + sum(map(ord, cond.cid)))
+        pool = torch.where((stats["density"] > 1e-3) & (stats["density"] <= cond.max_density))[0]
+        j = pool[torch.randint(0, len(pool), (1,), generator=g)]
+        gen = sae.W_dec[j[0]] / sae.W_dec[j[0]].norm()
     spec = EditSpec(method=cond.method, T=T, wT=wT, alpha=alpha, protect_topm=cond.protect_topm,
                     ridge_rel=cond.ridge_rel, fs_rounds=cond.fs_rounds, opt_mu_p=cond.opt_mu_p,
                     opt_mu_new=cond.opt_mu_new, generic_dir=gen, feat_scale=stats["scale"])
@@ -57,31 +63,65 @@ def build_editor(sae, stats, cond: Condition, collect=True) -> Editor:
 
 
 @torch.no_grad()
-def utility(model, editor, util_tokens) -> dict:
-    clean = model.logits(util_tokens)
-    edited = model.logits(util_tokens, editor=editor)
+def utility(model, editor, util_tokens, down=None) -> dict:
+    """Held-out OWT text with the edit applied at every non-BOS position.
+    down = (cap_layer, downstream SAEWrap): independent internal readout at a later layer with a different
+    SAE -- relative drift of features active in the clean run and number of newly active features."""
+    if down is None:
+        clean = model.logits(util_tokens)
+        edited = model.logits(util_tokens, editor=editor)
+    else:
+        clean, hc = model.logits_capture(util_tokens, None, down[0])
+        edited, he = model.logits_capture(util_tokens, editor, down[0])
     lp_c = torch.log_softmax(clean[:, :-1].float(), -1)
     lp_e = torch.log_softmax(edited[:, :-1].float(), -1)
     tgt = util_tokens[:, 1:].unsqueeze(-1)
     ce_c = -lp_c.gather(-1, tgt).mean()
     ce_e = -lp_e.gather(-1, tgt).mean()
     kl = (lp_c.exp() * (lp_c - lp_e)).sum(-1).mean()
-    return dict(ce_clean=float(ce_c), dce=float(ce_e - ce_c), kl=float(kl))
+    out = dict(ce_clean=float(ce_c), dce=float(ce_e - ce_c), kl=float(kl))
+    if down is not None:
+        sae2 = down[1]
+        d = hc.shape[-1]
+        fc = sae2.encode(hc[:, 1:].reshape(-1, d).float())
+        fe = sae2.encode(he[:, 1:].reshape(-1, d).float())
+        P = fc > 0
+        out["down_p_rel_drift"] = float((((fe - fc) * P).norm(dim=-1) / (fc * P).norm(dim=-1).clamp_min(1e-6)).mean())
+        out["down_p_lost_per_pos"] = float((P & (fe <= 0)).sum(-1).float().mean())
+        out["down_new_active_per_pos"] = float(((fe > 0) & ~P).sum(-1).float().mean())
+    return out
 
 
-def run_condition(model, sae, stats, cond: Condition, prompt_tokens, util_tokens, max_new_tokens=40, seed=0) -> dict:
-    ed = build_editor(sae, stats, cond)
+PROMPT_CUE = "This is a story about {}."
+
+
+def prompt_tokens_with_cue(model, prompt_tokens, cid):
+    """Prompting reference (not an activation edit): [BOS] + cue + original prompt tokens."""
+    from .concepts import concept_by_id
+
+    name = concept_by_id(cid)["name"].lower().replace("&", "and")
+    cue = model.tokenizer(PROMPT_CUE.format(name) + "\n")["input_ids"]
+    b = prompt_tokens.shape[0]
+    return torch.cat([prompt_tokens[:, :1], torch.tensor(cue).expand(b, -1), prompt_tokens[:, 1:]], 1)
+
+
+def run_condition(model, sae, stats, cond: Condition, prompt_tokens, util_tokens, max_new_tokens=40, seed=0,
+                  down=None) -> dict:
+    unedited = cond.method in ("none", "prompt")
+    ed = build_editor(sae, stats, cond if not unedited else Condition(cond.setting, cond.cid, "none", 0.0))
+    if cond.method == "prompt":
+        prompt_tokens = prompt_tokens_with_cue(model, prompt_tokens, cond.cid)
     t0 = time.perf_counter()
-    out = model.generate(prompt_tokens, ed if cond.method != "none" else None, max_new_tokens=max_new_tokens, seed=seed)
+    out = model.generate(prompt_tokens, None if unedited else ed, max_new_tokens=max_new_tokens, seed=seed)
     gen_secs = time.perf_counter() - t0
     internal = ed.summary()
-    if cond.method == "none":
+    if unedited:
         internal = {k: 0.0 for k in internal}
     L = prompt_tokens.shape[1]
     conts = [model.tokenizer.decode(out[i, L:].tolist()) for i in range(out.shape[0])]
     cont_ids = [out[i, L:].tolist() for i in range(out.shape[0])]
-    ued = build_editor(sae, stats, cond, collect=False)
-    util = utility(model, ued if cond.method != "none" else None, util_tokens)
+    ued = build_editor(sae, stats, cond, collect=False) if not unedited else None
+    util = utility(model, ued, util_tokens, down=down)
     return dict(key=cond.key(), cond=asdict(cond), conts=conts, cont_ids=cont_ids, internal=internal, utility=util,
                 gen_secs=gen_secs, T=select_features(stats, cond.cid, cond.K, cond.max_density)[0].tolist())
 

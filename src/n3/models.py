@@ -178,6 +178,24 @@ class HFModel:
             return self.model(tokens).logits
 
     @torch.no_grad()
+    def logits_capture(self, tokens, editor: Editor | None, cap_layer: int):
+        """Logits plus the (centred, if self.center) output of decoder block `cap_layer` (a later layer)."""
+        store = {}
+        mod = self.model.transformer.h[cap_layer] if hasattr(self.model, "transformer") else self.model.model.layers[cap_layer]
+
+        def fn(m, inp, out):
+            h = (out[0] if isinstance(out, tuple) else out).detach()
+            store["h"] = h - h.mean(-1, keepdim=True) if self.center else h
+
+        hnd = mod.register_forward_hook(fn)
+        try:
+            with self.editing(editor):
+                logits = self.model(tokens).logits
+        finally:
+            hnd.remove()
+        return logits, store["h"]
+
+    @torch.no_grad()
     def generate(self, tokens, editor, max_new_tokens, seed, temperature=1.0, top_p=0.9):
         torch.manual_seed(seed)
         with self.editing(editor):

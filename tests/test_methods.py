@@ -112,3 +112,14 @@ def test_opt_under_inference_mode(acts, relu_sae):
     with torch.inference_mode():
         delta = ed(acts[:8].clone())
     assert torch.allclose(delta.norm(dim=-1), torch.full((8,), 30.0), atol=1e-3)
+
+
+def test_randP_matches_constraint_count(acts, relu_sae):
+    ed_real = Editor(relu_sae, spec("dec_proj_fs", [100], alpha=30.0))
+    ed_real(acts)
+    ed_rand = Editor(relu_sae, spec("dec_proj_fs_randP", [100], alpha=30.0))
+    d = ed_rand(acts)
+    assert torch.allclose(d.norm(dim=-1), torch.full((acts.shape[0],), 30.0), atol=1e-3)
+    assert abs(ed_real.summary()["n_constraints"] - ed_rand.summary()["n_constraints"]) < 1e-6
+    # random protected rows do not protect the actually-active features
+    assert ed_rand.summary()["p_rel_change"] > ed_real.summary()["p_rel_change"]
