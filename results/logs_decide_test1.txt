@@ -1,0 +1,49 @@
+{
+ "H1_GO": false,
+ "checks": {
+  "dec": {
+   "holm_reject": false,
+   "direction_positive": true,
+   "bootstrap_lo_gt0": false,
+   "fluency_guard": true,
+   "degeneration_guard": true,
+   "nli_concordance": true,
+   "pass": false
+  },
+  "enc": {
+   "holm_reject": true,
+   "direction_positive": true,
+   "bootstrap_lo_gt0": true,
+   "fluency_guard": true,
+   "degeneration_guard": true,
+   "nli_concordance": true,
+   "pass": true
+  },
+  "diffmean": {
+   "holm_reject": false,
+   "direction_positive": true,
+   "bootstrap_lo_gt0": false,
+   "fluency_guard": true,
+   "degeneration_guard": true,
+   "nli_concordance": true,
+   "pass": false
+  },
+  "random": {
+   "holm_reject": true,
+   "direction_positive": true,
+   "bootstrap_lo_gt0": true,
+   "fluency_guard": true,
+   "degeneration_guard": true,
+   "nli_concordance": true,
+   "pass": true
+  }
+ },
+ "collateral_ok": true,
+ "matched_fluency_dC": {}
+}
+[norm-matched alpha=0.3] dec_proj - dec: dC +0.013 [-0.033, +0.058] signflip p=0.3701; dNLL +0.024; dce -0.013
+[norm-matched alpha=0.3] dec_proj - enc: dC +0.182 [+0.102, +0.269] signflip p=0.0001; dNLL -0.105; dce -0.034
+dec_proj - dec: dC +0.013 boot95 [-0.033, +0.058] signflip p=0.3701 (11/16 concepts > 0)
+dec_proj - enc: dC +0.182 boot95 [+0.102, +0.269] signflip p=0.0001 (15/16 concepts > 0)
+dec_proj - diffmean: dC +0.052 boot95 [-0.056, +0.159] signflip p=0.3203 (10/16 concepts > 0)
+dec_proj - random: dC +0.339 boot95 [+0.223, +0.461] signflip p=0.0000 (16/16 concepts > 0)

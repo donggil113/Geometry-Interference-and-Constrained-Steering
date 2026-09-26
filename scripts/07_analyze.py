@@ -33,7 +33,10 @@ for path in sorted(rdir.glob("*.jsonl")):
         continue
     scores = {}
     for l in open(sp):
-        r = json.loads(l)
+        try:
+            r = json.loads(l)
+        except json.JSONDecodeError:  # partially written last line (scorer still running)
+            continue
         scores[r["key"]] = r["scores"]
     base = [r for r in rows if r["cond"]["method"] == "none"]
     assert len(base) == 1, path
