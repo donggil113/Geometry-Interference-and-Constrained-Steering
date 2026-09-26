@@ -78,7 +78,64 @@ The protected set P at a position = the features active there, excluding T.
   * The corrected method is statistically indistinguishable from `diffmean`/`random`.
 * Large SAE retraining is out of scope unless H1 is GO.
 
-## 7. Decided on dev (filled from `results/runs/dev_*` only; see `configs/protocol.json`)
+## 7. Decided on dev: frozen in `configs/protocol.json`
 
-* alpha grid, `B_NLL`, K (number of target features), P rule, ridge lambda, and `PRIMARY_CORRECTED`:
-  see `configs/protocol.json`.
+All values below come from the `dev2` run: 8 dev concepts × 24 dev prompts, GPT-2 with the jb ReLU
+SAE, after the centring fix.
+
+- **Fixed a priori:**
+  - `B_NLL` = 1.0 nats/token.
+  - Degeneration floor: dDist2 ≥ −0.10.
+  - α grid {0.1, 0.2, 0.3, 0.45, 0.65} × median ‖h‖ (78.9). α = 0.9 was dropped mid-dev because
+    every method exceeds B_NLL there.
+  - P = all active non-target features (`protect_topm` = None), `ridge_rel` = 1, `fs_rounds` = 3,
+    `opt` μ_P = μ_new = 1.
+- **Selected on dev:** each method's (K, α) = the largest concept-balanced dev dC under the budget.
+
+| method | K | α | dev dC | dev dNLL |
+|---|---|---|---|---|
+| dec_proj | 3 | 0.30 | 0.365 | 0.65 |
+| dec | 3 | 0.30 | 0.337 | 0.63 |
+| diffmean | – | 0.20 | 0.307 | 0.49 |
+| dec_proj_fs | 3 | 0.30 | 0.260 | 0.53 |
+| pinv | 3 | 0.30 | 0.219 | 0.74 |
+| ridge | 3 | 0.30 | 0.216 | 0.82 |
+| enc | 3 | 0.30 | 0.195 | 0.95 |
+| pinv_fs | 3 | 0.45 | 0.168 | 0.91 |
+| opt | 1 | 0.20 | 0.082 | 0.13 |
+| random | – | 0.10 | 0.017 | 0.06 |
+
+- **PRIMARY_CORRECTED = `dec_proj`.** This is the decoder direction projected onto the null space of
+  the active protected features' (centred) encoder rows. It is the argmax of dev dC over the corrected
+  methods.
+- **H1 comparators:** `dec`, `enc`, `diffmean`, `random`, each at its own frozen point.
+- **Controls, run at the primary's (K, α):**
+  - `dec_rand_feat`: the decoder row of a random feature.
+  - `dec_proj_randP`: the same projection, but onto a count-matched *random* protected set.
+- **Reference:** `prompt`, a concept cue prepended to the prompt. It is not an activation edit.
+
+### Amendments made before any held-out run, each prompted by the code review
+
+- **A1.** Held-out *family* `entity`: 8 seeded DBpedia-14 classes. Held-out concepts: 8 → 16.
+- **A2.** Inference.
+  - Primary test: an exact concept-level sign-flip test on per-concept mean dC differences, with
+    Holm correction across the 4 comparators (α = 0.05).
+  - The two-way (concept × prompt) cluster-bootstrap 95% CI must also exclude 0.
+  - The earlier two-way bootstrap alone is anti-conservative with this few concepts.
+- **A3.** Guards.
+  - Degeneration: dDist2 difference ≥ −0.05.
+  - NLI-judge concordance: the direction of the dC difference must agree under the zero-shot NLI
+    judge. This matters because the concept texts come from the classifier judges' training sources.
+  - Absolute fluency guard: the primary's held-out dNLL ≤ B_NLL + 0.1.
+  - Collateral vs `dec`: protJS +0.01, dce +0.05, dRel −0.02.
+  - The relative fluency guard was replaced before any held-out run, because comparators sit at their
+    own dev-selected α. For example, `random` selects α = 0.1 at a cost of ≈ 0 nats.
+- **A4.** Secondary norm-matched comparison: every comparator at the primary's α = 0.30. Reported,
+  not part of GO.
+- **A5.** H2 uses all 24 concepts (8 dev + 16 held-out), evaluated on the held-out prompts at the
+  frozen α.
+  - Primary diagnostic: `c_qp_rel`.
+  - κ was found degenerate (between-concept CV ≈ 0.02–0.04; `docs/03_realizability.md`), so it cannot
+    be the primary diagnostic.
+
+The run tag and fingerprint are in `configs/protocol.json` (`frozen_at_commit`, `code_fingerprint`).

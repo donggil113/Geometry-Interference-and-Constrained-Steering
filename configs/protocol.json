@@ -1,0 +1,610 @@
+{
+  "frozen_from_dev_run": "dev2",
+  "frozen_at_commit": "fb23c60c173254fe83097f8960d7859bb1d69037",
+  "code_fingerprint": "6fd1880bff13",
+  "B_NLL": 1.0,
+  "degeneration_floor": -0.1,
+  "primary_setting": "gpt2_relu_jb_L6",
+  "primary_corrected": "dec_proj",
+  "corrected_methods": [
+    "pinv",
+    "ridge",
+    "dec_proj",
+    "pinv_fs",
+    "dec_proj_fs",
+    "opt"
+  ],
+  "cfg_by_method": {
+    "dec_proj": "dec_proj|K3|PNone|r1.0|fs3|mp1.0|mn1.0|d0.05",
+    "dec": "dec|K3|PNone|r1.0|fs3|mp1.0|mn1.0|d0.05",
+    "diffmean": "diffmean|K1|PNone|r1.0|fs3|mp1.0|mn1.0|d0.05",
+    "dec_proj_fs": "dec_proj_fs|K3|PNone|r1.0|fs3|mp1.0|mn1.0|d0.05",
+    "pinv": "pinv|K3|PNone|r1.0|fs3|mp1.0|mn1.0|d0.05",
+    "ridge": "ridge|K3|PNone|r1.0|fs3|mp1.0|mn1.0|d0.05",
+    "enc": "enc|K3|PNone|r1.0|fs3|mp1.0|mn1.0|d0.05",
+    "pinv_fs": "pinv_fs|K3|PNone|r1.0|fs3|mp1.0|mn1.0|d0.05",
+    "opt": "opt|K1|PNone|r1.0|fs3|mp1.0|mn1.0|d0.05",
+    "random": "random|K1|PNone|r1.0|fs3|mp1.0|mn1.0|d0.05",
+    "dec_rand_feat": "dec_rand_feat|K1|PNone|r1.0|fs3|mp1.0|mn1.0|d0.05",
+    "dec_proj_randP": "dec_proj_randP|K3|PNone|r1.0|fs3|mp1.0|mn1.0|d0.05",
+    "prompt": "prompt|K1|PNone|r1.0|fs3|mp1.0|mn1.0|d0.05"
+  },
+  "K_by_method": {
+    "dec_proj": 3,
+    "dec": 3,
+    "diffmean": 1,
+    "dec_proj_fs": 3,
+    "pinv": 3,
+    "ridge": 3,
+    "enc": 3,
+    "pinv_fs": 3,
+    "opt": 1,
+    "random": 1,
+    "dec_rand_feat": 1,
+    "dec_proj_randP": 3,
+    "prompt": 1
+  },
+  "alpha_by_method": {
+    "dec_proj": 0.3,
+    "dec": 0.3,
+    "diffmean": 0.2,
+    "dec_proj_fs": 0.3,
+    "pinv": 0.3,
+    "ridge": 0.3,
+    "enc": 0.3,
+    "pinv_fs": 0.45,
+    "opt": 0.2,
+    "random": 0.1,
+    "dec_rand_feat": 0.3,
+    "dec_proj_randP": 0.3,
+    "prompt": 0.0
+  },
+  "dev_selected": [
+    {
+      "method": "dec_proj",
+      "cfg": "dec_proj|K3|PNone|r1.0|fs3|mp1.0|mn1.0|d0.05",
+      "K": 3,
+      "alpha": 0.3,
+      "dC": 0.36489399340727385,
+      "dNLL": 0.6501628098388513,
+      "dDist2": -0.0053418803418803455,
+      "dRel": -0.08479419012049524,
+      "protJS": 0.20686420294516902,
+      "dce": 0.35265251994132996
+    },
+    {
+      "method": "dec",
+      "cfg": "dec|K3|PNone|r1.0|fs3|mp1.0|mn1.0|d0.05",
+      "K": 3,
+      "alpha": 0.3,
+      "dC": 0.3374917553400489,
+      "dNLL": 0.62699552004536,
+      "dDist2": -0.005742521367521368,
+      "dRel": -0.08867689469479956,
+      "protJS": 0.18967819914585682,
+      "dce": 0.3727031648159027
+    },
+    {
+      "method": "diffmean",
+      "cfg": "diffmean|K1|PNone|r1.0|fs3|mp1.0|mn1.0|d0.05",
+      "K": 1,
+      "alpha": 0.2,
+      "dC": 0.30738483659668725,
+      "dNLL": 0.4871877369781335,
+      "dDist2": -0.00480769230769231,
+      "dRel": -0.06295450419808428,
+      "protJS": 0.19186370231589184,
+      "dce": 0.1733645796775818
+    },
+    {
+      "method": "dec_proj_fs",
+      "cfg": "dec_proj_fs|K3|PNone|r1.0|fs3|mp1.0|mn1.0|d0.05",
+      "K": 3,
+      "alpha": 0.3,
+      "dC": 0.2598135218563584,
+      "dNLL": 0.530181330939134,
+      "dDist2": -0.0036057692307692336,
+      "dRel": -0.06158940938378994,
+      "protJS": 0.2235540183316758,
+      "dce": 0.2664960026741028
+    },
+    {
+      "method": "pinv",
+      "cfg": "pinv|K3|PNone|r1.0|fs3|mp1.0|mn1.0|d0.05",
+      "K": 3,
+      "alpha": 0.3,
+      "dC": 0.21886304235166182,
+      "dNLL": 0.743803499887387,
+      "dDist2": -0.006810897435897437,
+      "dRel": -0.0762251566144793,
+      "protJS": 0.22338815255857059,
+      "dce": 0.32578012347221375
+    },
+    {
+      "method": "ridge",
+      "cfg": "ridge|K3|PNone|r1.0|fs3|mp1.0|mn1.0|d0.05",
+      "K": 3,
+      "alpha": 0.3,
+      "dC": 0.21618792384068303,
+      "dNLL": 0.8195970766246319,
+      "dDist2": -0.0077457264957264986,
+      "dRel": -0.08282646467462958,
+      "protJS": 0.21090776303432757,
+      "dce": 0.356987327337265
+    },
+    {
+      "method": "enc",
+      "cfg": "enc|K3|PNone|r1.0|fs3|mp1.0|mn1.0|d0.05",
+      "K": 3,
+      "alpha": 0.3,
+      "dC": 0.19466974157065428,
+      "dNLL": 0.9484876009325187,
+      "dDist2": -0.013755341880341884,
+      "dRel": -0.059343980373038605,
+      "protJS": 0.24156641623338956,
+      "dce": 0.4105975329875946
+    },
+    {
+      "method": "pinv_fs",
+      "cfg": "pinv_fs|K3|PNone|r1.0|fs3|mp1.0|mn1.0|d0.05",
+      "K": 3,
+      "alpha": 0.45,
+      "dC": 0.16790103358819883,
+      "dNLL": 0.9131905150910219,
+      "dDist2": -0.003605769230769232,
+      "dRel": -0.08984886637578407,
+      "protJS": 0.23217179348367717,
+      "dce": 0.350812166929245
+    },
+    {
+      "method": "opt",
+      "cfg": "opt|K1|PNone|r1.0|fs3|mp1.0|mn1.0|d0.05",
+      "K": 1,
+      "alpha": 0.2,
+      "dC": 0.08239682847844658,
+      "dNLL": 0.12918835009137788,
+      "dDist2": -0.008680555555555558,
+      "dRel": 0.002815312948465968,
+      "protJS": 0.16964226525828824,
+      "dce": 0.059673309326171875
+    },
+    {
+      "method": "random",
+      "cfg": "random|K1|PNone|r1.0|fs3|mp1.0|mn1.0|d0.05",
+      "K": 1,
+      "alpha": 0.1,
+      "dC": 0.016503655467810553,
+      "dNLL": 0.055496208369731896,
+      "dDist2": -0.009882478632478634,
+      "dRel": 0.010056372722222779,
+      "protJS": 0.1287623196062055,
+      "dce": 0.014242768287658691
+    }
+  ],
+  "h1_comparators": [
+    "dec",
+    "enc",
+    "diffmean",
+    "random"
+  ],
+  "controls": [
+    "dec_rand_feat",
+    "dec_proj_randP"
+  ],
+  "reference_methods": [
+    "prompt"
+  ],
+  "h1_rule": {
+    "test": "exact concept-level sign-flip on per-concept mean dC differences",
+    "alpha": 0.05,
+    "multiplicity": "holm",
+    "require_bootstrap_lo_gt0": true,
+    "fluency_guard_primary_max_dNLL": 1.1,
+    "deg_guard_min_dDist2_diff": -0.05,
+    "norm_matched_secondary": "every comparator also evaluated at the primary's alpha (reported, not part of GO)",
+    "nli_concordance": true,
+    "collateral": {
+      "vs": "dec",
+      "protJS_max_excess": 0.01,
+      "dce_max_excess": 0.05,
+      "dRel_max_deficit": 0.02
+    }
+  },
+  "h2": {
+    "outcome_method": "dec_proj",
+    "primary_diagnostic": "c_qp_rel",
+    "diagnostics": [
+      "c_qp_rel",
+      "kappa",
+      "c_lin_rel",
+      "c_dec_rel",
+      "dec_P_rel_change",
+      "dec_new_active",
+      "lin_new_active"
+    ],
+    "rule": "supported iff |rho| >= 0.5, bootstrap CI excludes 0, and |rho| > max |rho| of baselines (max_dec_cos, neighbor_density_03, log_density, enc_dec_cos, dC_diffmean); all 24 concepts on held-out prompts"
+  },
+  "test_grids": {
+    "primary": {
+      "setting": "gpt2_relu_jb_L6",
+      "split": "test",
+      "explicit": [
+        {
+          "method": "dec",
+          "alpha_mult": 0.3,
+          "K": 3,
+          "ridge_rel": 1.0,
+          "fs_rounds": 3,
+          "opt_mu_p": 1.0,
+          "opt_mu_new": 1.0,
+          "max_density": 0.05
+        },
+        {
+          "method": "enc",
+          "alpha_mult": 0.3,
+          "K": 3,
+          "ridge_rel": 1.0,
+          "fs_rounds": 3,
+          "opt_mu_p": 1.0,
+          "opt_mu_new": 1.0,
+          "max_density": 0.05
+        },
+        {
+          "method": "pinv",
+          "alpha_mult": 0.3,
+          "K": 3,
+          "ridge_rel": 1.0,
+          "fs_rounds": 3,
+          "opt_mu_p": 1.0,
+          "opt_mu_new": 1.0,
+          "max_density": 0.05
+        },
+        {
+          "method": "ridge",
+          "alpha_mult": 0.3,
+          "K": 3,
+          "ridge_rel": 1.0,
+          "fs_rounds": 3,
+          "opt_mu_p": 1.0,
+          "opt_mu_new": 1.0,
+          "max_density": 0.05
+        },
+        {
+          "method": "dec_proj",
+          "alpha_mult": 0.3,
+          "K": 3,
+          "ridge_rel": 1.0,
+          "fs_rounds": 3,
+          "opt_mu_p": 1.0,
+          "opt_mu_new": 1.0,
+          "max_density": 0.05
+        },
+        {
+          "method": "pinv_fs",
+          "alpha_mult": 0.45,
+          "K": 3,
+          "ridge_rel": 1.0,
+          "fs_rounds": 3,
+          "opt_mu_p": 1.0,
+          "opt_mu_new": 1.0,
+          "max_density": 0.05
+        },
+        {
+          "method": "dec_proj_fs",
+          "alpha_mult": 0.3,
+          "K": 3,
+          "ridge_rel": 1.0,
+          "fs_rounds": 3,
+          "opt_mu_p": 1.0,
+          "opt_mu_new": 1.0,
+          "max_density": 0.05
+        },
+        {
+          "method": "opt",
+          "alpha_mult": 0.2,
+          "K": 1,
+          "ridge_rel": 1.0,
+          "fs_rounds": 3,
+          "opt_mu_p": 1.0,
+          "opt_mu_new": 1.0,
+          "max_density": 0.05
+        },
+        {
+          "method": "diffmean",
+          "alpha_mult": 0.2,
+          "K": 1,
+          "ridge_rel": 1.0,
+          "fs_rounds": 3,
+          "opt_mu_p": 1.0,
+          "opt_mu_new": 1.0,
+          "max_density": 0.05
+        },
+        {
+          "method": "random",
+          "alpha_mult": 0.1,
+          "K": 1,
+          "ridge_rel": 1.0,
+          "fs_rounds": 3,
+          "opt_mu_p": 1.0,
+          "opt_mu_new": 1.0,
+          "max_density": 0.05
+        },
+        {
+          "method": "dec_rand_feat",
+          "alpha_mult": 0.3,
+          "K": 1,
+          "ridge_rel": 1.0,
+          "fs_rounds": 3,
+          "opt_mu_p": 1.0,
+          "opt_mu_new": 1.0,
+          "max_density": 0.05
+        },
+        {
+          "method": "dec_proj_randP",
+          "alpha_mult": 0.3,
+          "K": 3,
+          "ridge_rel": 1.0,
+          "fs_rounds": 3,
+          "opt_mu_p": 1.0,
+          "opt_mu_new": 1.0,
+          "max_density": 0.05
+        },
+        {
+          "method": "prompt",
+          "alpha_mult": 0.0,
+          "K": 1,
+          "ridge_rel": 1.0,
+          "fs_rounds": 3,
+          "opt_mu_p": 1.0,
+          "opt_mu_new": 1.0,
+          "max_density": 0.05
+        },
+        {
+          "method": "dec",
+          "alpha_mult": 0.3,
+          "K": 3,
+          "ridge_rel": 1.0,
+          "fs_rounds": 3,
+          "opt_mu_p": 1.0,
+          "opt_mu_new": 1.0,
+          "max_density": 0.05
+        },
+        {
+          "method": "enc",
+          "alpha_mult": 0.3,
+          "K": 3,
+          "ridge_rel": 1.0,
+          "fs_rounds": 3,
+          "opt_mu_p": 1.0,
+          "opt_mu_new": 1.0,
+          "max_density": 0.05
+        },
+        {
+          "method": "diffmean",
+          "alpha_mult": 0.3,
+          "K": 1,
+          "ridge_rel": 1.0,
+          "fs_rounds": 3,
+          "opt_mu_p": 1.0,
+          "opt_mu_new": 1.0,
+          "max_density": 0.05
+        },
+        {
+          "method": "random",
+          "alpha_mult": 0.3,
+          "K": 1,
+          "ridge_rel": 1.0,
+          "fs_rounds": 3,
+          "opt_mu_p": 1.0,
+          "opt_mu_new": 1.0,
+          "max_density": 0.05
+        }
+      ],
+      "pareto_methods": [
+        "dec",
+        "diffmean",
+        "dec_proj"
+      ],
+      "pareto_alphas": [
+        0.1,
+        0.2,
+        0.3,
+        0.45,
+        0.65
+      ],
+      "downstream": [
+        7,
+        "gpt2-small-res-jb",
+        "blocks.8.hook_resid_pre"
+      ]
+    },
+    "h2_dev_concepts_on_test_prompts": {
+      "setting": "gpt2_relu_jb_L6",
+      "split": "test",
+      "concepts": [
+        "topic:2",
+        "topic:3",
+        "topic:5",
+        "topic:6",
+        "topic:7",
+        "emotion:1",
+        "emotion:4",
+        "emotion:5"
+      ],
+      "explicit": [
+        {
+          "method": "dec_proj",
+          "alpha_mult": 0.3,
+          "K": 3,
+          "ridge_rel": 1.0,
+          "fs_rounds": 3,
+          "opt_mu_p": 1.0,
+          "opt_mu_new": 1.0,
+          "max_density": 0.05
+        },
+        {
+          "method": "dec",
+          "alpha_mult": 0.3,
+          "K": 3,
+          "ridge_rel": 1.0,
+          "fs_rounds": 3,
+          "opt_mu_p": 1.0,
+          "opt_mu_new": 1.0,
+          "max_density": 0.05
+        },
+        {
+          "method": "diffmean",
+          "alpha_mult": 0.2,
+          "K": 1,
+          "ridge_rel": 1.0,
+          "fs_rounds": 3,
+          "opt_mu_p": 1.0,
+          "opt_mu_new": 1.0,
+          "max_density": 0.05
+        }
+      ]
+    },
+    "topk_transfer": {
+      "setting": "gpt2_topk_oai_L6",
+      "split": "test",
+      "explicit": [
+        {
+          "method": "dec",
+          "alpha_mult": 0.3,
+          "K": 3,
+          "ridge_rel": 1.0,
+          "fs_rounds": 3,
+          "opt_mu_p": 1.0,
+          "opt_mu_new": 1.0,
+          "max_density": 0.05
+        },
+        {
+          "method": "enc",
+          "alpha_mult": 0.3,
+          "K": 3,
+          "ridge_rel": 1.0,
+          "fs_rounds": 3,
+          "opt_mu_p": 1.0,
+          "opt_mu_new": 1.0,
+          "max_density": 0.05
+        },
+        {
+          "method": "pinv",
+          "alpha_mult": 0.3,
+          "K": 3,
+          "ridge_rel": 1.0,
+          "fs_rounds": 3,
+          "opt_mu_p": 1.0,
+          "opt_mu_new": 1.0,
+          "max_density": 0.05
+        },
+        {
+          "method": "ridge",
+          "alpha_mult": 0.3,
+          "K": 3,
+          "ridge_rel": 1.0,
+          "fs_rounds": 3,
+          "opt_mu_p": 1.0,
+          "opt_mu_new": 1.0,
+          "max_density": 0.05
+        },
+        {
+          "method": "dec_proj",
+          "alpha_mult": 0.3,
+          "K": 3,
+          "ridge_rel": 1.0,
+          "fs_rounds": 3,
+          "opt_mu_p": 1.0,
+          "opt_mu_new": 1.0,
+          "max_density": 0.05
+        },
+        {
+          "method": "pinv_fs",
+          "alpha_mult": 0.45,
+          "K": 3,
+          "ridge_rel": 1.0,
+          "fs_rounds": 3,
+          "opt_mu_p": 1.0,
+          "opt_mu_new": 1.0,
+          "max_density": 0.05
+        },
+        {
+          "method": "dec_proj_fs",
+          "alpha_mult": 0.3,
+          "K": 3,
+          "ridge_rel": 1.0,
+          "fs_rounds": 3,
+          "opt_mu_p": 1.0,
+          "opt_mu_new": 1.0,
+          "max_density": 0.05
+        },
+        {
+          "method": "opt",
+          "alpha_mult": 0.2,
+          "K": 1,
+          "ridge_rel": 1.0,
+          "fs_rounds": 3,
+          "opt_mu_p": 1.0,
+          "opt_mu_new": 1.0,
+          "max_density": 0.05
+        },
+        {
+          "method": "diffmean",
+          "alpha_mult": 0.2,
+          "K": 1,
+          "ridge_rel": 1.0,
+          "fs_rounds": 3,
+          "opt_mu_p": 1.0,
+          "opt_mu_new": 1.0,
+          "max_density": 0.05
+        },
+        {
+          "method": "random",
+          "alpha_mult": 0.1,
+          "K": 1,
+          "ridge_rel": 1.0,
+          "fs_rounds": 3,
+          "opt_mu_p": 1.0,
+          "opt_mu_new": 1.0,
+          "max_density": 0.05
+        },
+        {
+          "method": "dec_rand_feat",
+          "alpha_mult": 0.3,
+          "K": 1,
+          "ridge_rel": 1.0,
+          "fs_rounds": 3,
+          "opt_mu_p": 1.0,
+          "opt_mu_new": 1.0,
+          "max_density": 0.05
+        },
+        {
+          "method": "dec_proj_randP",
+          "alpha_mult": 0.3,
+          "K": 3,
+          "ridge_rel": 1.0,
+          "fs_rounds": 3,
+          "opt_mu_p": 1.0,
+          "opt_mu_new": 1.0,
+          "max_density": 0.05
+        }
+      ],
+      "pareto_methods": [
+        "dec",
+        "dec_proj"
+      ],
+      "pareto_alphas": [
+        0.1,
+        0.2,
+        0.3,
+        0.45,
+        0.65
+      ]
+    }
+  },
+  "notes": [
+    "alpha is a multiple of the setting's median residual norm (GPT-2 L6: 78.9)",
+    "every edit is projected onto 1-perp before norm matching (GPT-2 is mean-invariant)",
+    "Amendment A1: held-out entity family (8 DBpedia classes) added before any held-out run"
+  ]
+}
