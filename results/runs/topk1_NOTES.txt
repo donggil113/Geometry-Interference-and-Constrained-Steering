@@ -1,0 +1,1 @@
+2026-09-26 23:3x: TopK transfer grid reduced (after the primary H1 decision; no decision rule affected) to the frozen points of dec, dec_proj, enc, diffmean, random, dec_rand_feat, dec_proj_randP, for compute reasons. Rows already generated for pinv under the full grid are kept but not analyzed.

@@ -28,6 +28,19 @@
         "emotion:2",
         "emotion:3"
       ]
+    },
+    "entity": {
+      "dev": [],
+      "test": [
+        "entity:0",
+        "entity:11",
+        "entity:12",
+        "entity:13",
+        "entity:2",
+        "entity:4",
+        "entity:6",
+        "entity:8"
+      ]
     }
   },
   "prompts": {
@@ -127,6 +140,17 @@
     "topic:9",
     "emotion:0",
     "emotion:2",
-    "emotion:3"
+    "emotion:3",
+    "entity:0",
+    "entity:11",
+    "entity:12",
+    "entity:13",
+    "entity:2",
+    "entity:4",
+    "entity:6",
+    "entity:8"
+  ],
+  "amendments": [
+    "A1 (2026-09-26, before any held-out run): added held-out family 'entity' (DBpedia-14, judge fabriceyhc/bert-base-uncased-dbpedia_14) with 8 seeded classes to raise held-out concepts from 8 to 16."
   ]
 }

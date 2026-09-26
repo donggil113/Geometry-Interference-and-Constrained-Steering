@@ -29,5 +29,6 @@
   "relevance_sanity": [
     0.6025274395942688,
     -0.002023225650191307
-  ]
+  ],
+  "entity_judge_acc_identity_map": 0.9952380952380953
 }

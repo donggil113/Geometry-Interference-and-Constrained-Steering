@@ -1,5 +1,22 @@
 # N3 protocol (pre-registered before any held-out run)
 
+> **Reading note, added after the held-out run.** §7 (frozen decisions and amendments A1–A5) supersedes
+> the original plan in §3 and §6. Specifically, §7 adds the entity family (16 held-out concepts, not 8),
+> the concept-level sign-flip test with Holm correction, the absolute fluency guard, and H2 over 24
+> concepts. The H1 decision was NO_GO under **both** the §6 and the §7 rules.
+>
+> **Disclosures.**
+> - (i) `configs/splits.json` with amendment A1 was accidentally left out of the pre-registration
+>   commit `4282fb5` and was committed afterwards. The seeded function that creates it,
+>   `concepts.amend_splits_entity_family`, *was* committed before the freeze, and it regenerates
+>   exactly the 8 classes used.
+> - (ii) The switch from a relative to an absolute fluency guard (commit `fb23c60`) was made after the
+>   dev analysis, 27 s before the freeze. On dev it favoured the primary method. It does not affect the
+>   NO_GO outcome.
+> - (iii) `protocol.json` records `frozen_at_commit = fb23c60`, the parent of the freeze commit. The
+>   code fingerprint is identical.
+> - (iv) `dec_rand_feat` is frozen at K = 1: a single random feature, at the primary's α.
+
 Status: **frozen** once `configs/protocol.json` is committed. Everything under "decided on dev" is
 filled in from dev-split results only, and the commit hash that freezes it comes *before* the first
 held-out generation (`results/runs/test_*`).
