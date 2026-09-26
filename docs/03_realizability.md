@@ -92,4 +92,66 @@ No global guarantee is claimed for this setting.
    - Only the cost magnitudes (c_qp: CV 0.35 / 0.20; c_dec: CV 0.50 / 0.42) vary enough to be
      tested in H2.
 
-*(TopK and JumpReLU settings: see below, filled when those runs complete.)*
+## Results: GPT-2 L6, OpenAI v5 TopK (k = 32) with LayerNorm input (same site), 30 concepts × 48 positions
+
+| | K = 1 | K = 3 |
+|---|---|---|
+| first-order free / linear-protected cost (/‖h‖) | 0.116 / 0.119 | 0.203 / 0.207 |
+| κ | 1.02 (CV 0.006) | 1.02 (CV 0.003) |
+| true-forward error of the linear solution on T (relative) | 0.8% | 3.5% |
+| **structural TopK conflict** (T inactive and all k slots protected) | **99.3%** | **100%** |
+| linear solution: protected lost / new active | 4 / 3 | 8 / 5 |
+| Gauss–Newton on the true encoder: residual on T and A pre-activations | 0 | 0 |
+| … yet protected features lost (evicted) / new active | 3 / 2 | 8 / 5 |
+| decoder steering: cost / ‖Δf_P‖/‖f_P‖ / lost / new | 0.15 / 0.12 / 4 / 3 | 0.42 / 0.28 / 12 / 9 (7% not reachable within the bracket) |
+
+### Reading
+
+- Under TopK, "keep every active feature" is **structurally unrealizable**, whatever the budget.
+  - The target starts inactive in 98–99% of positions, and the k slots are full.
+  - Gauss–Newton hits every target and protected *pre-activation* exactly, yet 3–8 protected
+    features are still evicted.
+  - LayerNorm couples all features, so other features also move and enter the top-k.
+- A realizable P for TopK must leave at least |T| slots free. The frozen protocol does not tune
+  this, and the `*_fs` constraint generation cannot repair evictions, as expected.
+- These TopK statements come from a local (first-order) model checked with true forward passes.
+  No global guarantee is claimed.
+
+## Results: Gemma-3-270m L12, Gemma Scope 2 JumpReLU 16k (medium L0), 30 concepts × 48 Pile positions
+
+| | K = 1 | K = 3 |
+|---|---|---|
+| active protected \|A\| | 57 | 57 |
+| c_free / c_lin / **c_qp** (/‖h‖) | 0.034 / 0.042 / **0.044** | 0.053 / 0.068 / **0.074** |
+| κ | 1.24 (p10–p90 1.13–1.37; CV 0.05) | 1.29 (1.17–1.43; CV 0.04) |
+| c_qp / c_lin | 1.03 | 1.08 |
+| gate flips of the linear solution; first crossing t | 22; 0.056 | 74; 0.028 |
+| decoder: c_dec / ‖Δf_P‖/‖f_P‖ / new | 0.10 / 0.18 / 9 | 0.21 / 0.29 / 27 |
+| encoder–decoder cosine of the target | 0.34 | 0.30 |
+| QP verified exact / undetermined (float32 rounding at ‖h‖ ≈ 1.3e4) | 96.5% / 3.5% | (pooled over K) |
+
+### Reading
+
+- Same picture as the ReLU SAE, with more interference: κ ≈ 1.25.
+- The finite-step gap is larger: the linear edit flips 22–74 gates, and the first flip occurs 3–6%
+  of the way along the step.
+- Decoder steering is 2.3–2.8× more expensive than the exact edit, because encoder and decoder
+  rows of the same latent are far apart (cosine ≈ 0.3).
+- The 3.5% "undetermined" cases each have 1–2 latents that end within float32 rounding of their
+  JumpReLU threshold. The absolute margin is 1e-3, against a float32 ulp of ~1e-3 at this activation
+  scale. They are **not** counted as feasible (intent-to-treat).
+
+## Cross-setting summary (steps 4–5)
+
+1. **Rank or feasibility is never the binding question.** Every request is linearly feasible and,
+   for ReLU and JumpReLU, exactly feasible within budget. The exceptions are TopK, where a
+   combinatorial constraint (slot eviction) makes full preservation impossible, and a few
+   numerical-tolerance cases. None of this is claimed as a theorem.
+2. **The informative quantities are finite-step properties.**
+   - Local (Jacobian or pseudoinverse) solutions break after 3–11% of the step and flip 3–74 gates.
+   - The exact correction is cheap for piecewise-affine encoders (+1–8% norm).
+   - Under TopK the correction cannot restore the evicted slots.
+3. **Realizing an SAE edit and steering behavior are different operations.** The same-layer
+   encoder needs only 4–15% of ‖h‖ to move a target by its typical activation. Behavioral concept
+   steering needs pushes of roughly 0.2–0.5 ‖h‖ (see `docs/04_report.md`). Tier-0 realizability
+   therefore constrains behavior at most weakly; that is what H1 and H2 test.
