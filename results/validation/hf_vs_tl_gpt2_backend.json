@@ -1,0 +1,30 @@
+{
+  "resid_max_abs_diff": 7.2479248046875e-05,
+  "resid_rel_diff": 1.0294513685948914e-06,
+  "gpt2_relu_jb_L6_active_set_agree": 1.0,
+  "gpt2_relu_jb_L6_f_max_abs_diff": 7.2479248046875e-05,
+  "gpt2_relu_jb_L6_dec_edited_logprob_max_abs_diff": 0.000492095947265625,
+  "gpt2_relu_jb_L6_dec_edited_kl": -2.093457185381453e-09,
+  "gpt2_relu_jb_L6_enc_edited_logprob_max_abs_diff": 0.00035858154296875,
+  "gpt2_relu_jb_L6_enc_edited_kl": 9.792040067679864e-09,
+  "gpt2_relu_jb_L6_pinv_edited_logprob_max_abs_diff": 0.00045013427734375,
+  "gpt2_relu_jb_L6_pinv_edited_kl": -1.3751829897046264e-08,
+  "gpt2_relu_jb_L6_dec_proj_fs_edited_logprob_max_abs_diff": 0.00048828125,
+  "gpt2_relu_jb_L6_dec_proj_fs_edited_kl": 4.454899560357717e-09,
+  "gpt2_topk_oai_L6_active_set_agree": 1.0,
+  "gpt2_topk_oai_L6_f_max_abs_diff": 1.7642974853515625e-05,
+  "gpt2_topk_oai_L6_dec_edited_logprob_max_abs_diff": 0.0004177093505859375,
+  "gpt2_topk_oai_L6_dec_edited_kl": -5.192139607146373e-09,
+  "gpt2_topk_oai_L6_enc_edited_logprob_max_abs_diff": 0.000385284423828125,
+  "gpt2_topk_oai_L6_enc_edited_kl": 9.661636823921071e-09,
+  "gpt2_topk_oai_L6_pinv_edited_logprob_max_abs_diff": 0.0004100799560546875,
+  "gpt2_topk_oai_L6_pinv_edited_kl": 2.737725046664252e-10,
+  "gpt2_topk_oai_L6_dec_proj_fs_edited_logprob_max_abs_diff": 0.000362396240234375,
+  "gpt2_topk_oai_L6_dec_proj_fs_edited_kl": 1.7450837219712412e-08,
+  "greedy_generation_tokens_identical": true,
+  "greedy_generation_token_agreement": 1.0,
+  "edited_positions_hf_vs_tl": [
+    92,
+    92
+  ]
+}
