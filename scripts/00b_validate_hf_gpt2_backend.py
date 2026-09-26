@@ -22,11 +22,27 @@ for name in ["gpt2_relu_jb_L6", "gpt2_topk_oai_L6"]:
     fh, ft = sae.encode(Hh[mask]), sae.encode(Ht[mask])
     rep[f"{name}_active_set_agree"] = float(((fh > 0) == (ft > 0)).float().mean())
     rep[f"{name}_f_max_abs_diff"] = float((fh - ft).abs().max())
-    spec = EditSpec("dec", T=torch.tensor([16960]), wT=torch.ones(1), alpha=40.0)
     toks = torch.stack([hf.to_tokens([t])[0][:48] for t in texts])
-    lh_ = torch.log_softmax(hf.logits(toks, Editor(sae, spec, collect=False)).float(), -1)
-    lt_ = torch.log_softmax(tl.logits(toks, Editor(sae, spec, collect=False)).float(), -1)
-    rep[f"{name}_edited_logprob_max_abs_diff"] = float((lh_ - lt_)[:, 1:].abs().max())
-    rep[f"{name}_edited_kl"] = float((lt_.exp() * (lt_ - lh_)).sum(-1)[:, 1:].mean())
+    for method in ["dec", "enc", "pinv", "dec_proj_fs"]:  # h-independent and h-dependent edits
+        spec = EditSpec(method, T=torch.tensor([16960]), wT=torch.ones(1), alpha=40.0)
+        lh_ = torch.log_softmax(hf.logits(toks, Editor(sae, spec, collect=False)).float(), -1)
+        lt_ = torch.log_softmax(tl.logits(toks, Editor(sae, spec, collect=False)).float(), -1)
+        rep[f"{name}_{method}_edited_logprob_max_abs_diff"] = float((lh_ - lt_)[:, 1:].abs().max())
+        rep[f"{name}_{method}_edited_kl"] = float((lt_.exp() * (lt_ - lh_)).sum(-1)[:, 1:].mean())
+
+# greedy generation through the KV-cache path: identical tokens and identical edited-position counts
+sae = _sae("gpt2_relu_jb_L6")
+ptoks = torch.stack([hf.to_tokens([t])[0][:13] for t in texts[:4]])
+spec = EditSpec("dec_proj_fs", T=torch.tensor([16960]), wT=torch.ones(1), alpha=30.0)
+eh, et = Editor(sae, spec), Editor(sae, spec)
+with hf.editing(eh):
+    gh = hf.model.generate(ptoks, attention_mask=torch.ones_like(ptoks), max_new_tokens=12, min_new_tokens=12,
+                           do_sample=False, pad_token_id=hf.tokenizer.pad_token_id)
+with tl.editing(et):
+    gt = tl.model.generate(ptoks, max_new_tokens=12, do_sample=False, stop_at_eos=False, verbose=False,
+                           use_past_kv_cache=True, prepend_bos=False)
+rep["greedy_generation_tokens_identical"] = bool(torch.equal(gh[:, 13:], gt[:, 13:]))
+rep["greedy_generation_token_agreement"] = float((gh[:, 13:] == gt[:, 13:]).float().mean())
+rep["edited_positions_hf_vs_tl"] = [int(eh.stats["n"]), int(et.stats["n"])]
 print(rep)
 save_json(rep, ROOT / "results" / "validation" / "hf_vs_tl_gpt2_backend.json")

@@ -100,9 +100,19 @@ def prompt_tokens_with_cue(model, prompt_tokens, cid):
     from .concepts import concept_by_id
 
     name = concept_by_id(cid)["name"].lower().replace("&", "and")
-    cue = model.tokenizer(PROMPT_CUE.format(name) + "\n")["input_ids"]
+    cue = model.tokenizer(PROMPT_CUE.format(name) + "\n", add_special_tokens=False)["input_ids"]
     b = prompt_tokens.shape[0]
     return torch.cat([prompt_tokens[:, :1], torch.tensor(cue).expand(b, -1), prompt_tokens[:, 1:]], 1)
+
+
+def equal_length_prompts(model, prompts):
+    """[BOS] + prompt tokens, truncated to the shortest prompt so batches need no padding (padding would be
+    attended to / edited).  Returns (tokens, the prompt texts actually used)."""
+    toks = [model.to_tokens([p])[0] for p in prompts]
+    L = min(len(t) for t in toks)
+    toks = torch.stack([t[:L] for t in toks])
+    texts = [model.tokenizer.decode(t[1:].tolist()) for t in toks]
+    return toks, texts
 
 
 def run_condition(model, sae, stats, cond: Condition, prompt_tokens, util_tokens, max_new_tokens=40, seed=0,
@@ -126,11 +136,33 @@ def run_condition(model, sae, stats, cond: Condition, prompt_tokens, util_tokens
                 gen_secs=gen_secs, T=select_features(stats, cond.cid, cond.K, cond.max_density)[0].tolist())
 
 
-def done_keys(path: Path) -> set:
+def code_fingerprint() -> str:
+    """Hash of the library source; stored in every row so runs made with different code are never mixed."""
+    src = Path(__file__).resolve().parent
+    h = hashlib.sha1()
+    for p in sorted(src.glob("*.py")):
+        h.update(p.name.encode())
+        h.update(p.read_bytes())
+    return h.hexdigest()[:12]
+
+
+def done_keys(path: Path, fingerprint: str | None = None) -> set:
+    """Keys already present; refuses to resume a file produced by different library code."""
     if not path.exists():
         return set()
+    keys = set()
     with open(path) as f:
-        return {json.loads(l)["key"] for l in f if l.strip()}
+        for l in f:
+            if not l.strip():
+                continue
+            try:
+                r = json.loads(l)
+            except json.JSONDecodeError:  # truncated last line of an interrupted run
+                continue
+            if fingerprint is not None and r.get("code") not in (None, fingerprint):
+                raise RuntimeError(f"{path} was produced by code {r.get('code')} != current {fingerprint}; use a new run name")
+            keys.add(r["key"])
+    return keys
 
 
 def append_row(path: Path, row: dict):
@@ -140,8 +172,15 @@ def append_row(path: Path, row: dict):
 
 
 def load_rows(path: Path) -> list[dict]:
+    out = []
     with open(path) as f:
-        return [json.loads(l) for l in f if l.strip()]
+        for l in f:
+            if l.strip():
+                try:
+                    out.append(json.loads(l))
+                except json.JSONDecodeError:
+                    pass
+    return out
 
 
 # ------------------------------------------------------------------ judging
@@ -151,12 +190,15 @@ def score_rows(rows, prompts, judges, scored_path: Path, use_nli=False):
     if scored_path.exists():
         for r in load_rows(scored_path):
             have[r["key"]] = r
-    from .concepts import TOPICS, EMOTIONS
+    from .concepts import EMOTIONS, ENTITIES, TOPICS
 
-    todo = [r for r in rows if r["key"] not in have or (use_nli and "nli" not in have[r["key"]]["scores"])]
+    todo = [r for r in rows if r["key"] not in have or (use_nli and "nli" not in have[r["key"]]["scores"])
+            or ("entity" in judges and "entity_probs" not in have[r["key"]]["scores"])]
     for r in todo:
         conts = r["conts"]
         sc = dict(have[r["key"]]["scores"]) if r["key"] in have else {}
+        if "entity_probs" not in sc and "entity" in judges:
+            sc["entity_probs"] = judges["entity"].probs(conts).tolist()
         if "topic_probs" not in sc:
             sc["topic_probs"] = judges["topic"].probs(conts).tolist()
             sc["emotion_probs"] = judges["emotion"].probs(conts).tolist()
@@ -167,7 +209,7 @@ def score_rows(rows, prompts, judges, scored_path: Path, use_nli=False):
             sc["distinct2"] = [distinct_n(ids, 2) for ids in r["cont_ids"]]
         if use_nli and "nli" not in sc:
             fam, lab = r["cond"]["cid"].split(":")
-            name = TOPICS[int(lab)] if fam == "topic" else EMOTIONS[int(lab)]
+            name = {"topic": TOPICS, "emotion": EMOTIONS, "entity": ENTITIES}[fam][int(lab)]
             sc["nli"] = judges["nli"].entail_prob(conts, fam, name).tolist()
         have[r["key"]] = dict(key=r["key"], scores=sc)
         with open(scored_path, "a") as f:
@@ -176,9 +218,9 @@ def score_rows(rows, prompts, judges, scored_path: Path, use_nli=False):
 
 
 def load_judges(nli=False):
-    from .judges import EmotionJudge, FluencyJudge, NLIJudge, RelevanceJudge, TopicJudge
+    from .judges import EmotionJudge, EntityJudge, FluencyJudge, NLIJudge, RelevanceJudge, TopicJudge
 
-    j = dict(topic=TopicJudge(), emotion=EmotionJudge(), fluency=FluencyJudge(), relevance=RelevanceJudge())
+    j = dict(topic=TopicJudge(), emotion=EmotionJudge(), entity=EntityJudge(), fluency=FluencyJudge(), relevance=RelevanceJudge())
     if nli:
         j["nli"] = NLIJudge()
     return j

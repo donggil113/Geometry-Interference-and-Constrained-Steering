@@ -146,7 +146,8 @@ class Editor:
             pre = f = None
         else:
             sae = self.sae
-            pre, f = sae.encode_full(h)
+            # only methods that need the current activation pattern pay for a full encode (runtime accounting)
+            pre, f = (None, None) if m in ("dec", "enc") else sae.encode_full(h)
             delta = self._sae_method(h, pre, f)
         if self.center_delta and not (m == "none" or sp.alpha == 0):
             delta = _normalize_rows(delta - delta.mean(-1, keepdim=True), sp.alpha)

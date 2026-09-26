@@ -19,6 +19,9 @@ DATA_FILES = {
     # test splits: used only to validate the behavioral judges
     "yahoo_test": ("community-datasets/yahoo_answers_topics", "6652a1e7c94f7260a0bfd0c9092dd48e2d536ea1", "yahoo_answers_topics/test-00000-of-00001.parquet"),
     "emotion_test": ("dair-ai/emotion", "cab853a1dbdf4c42c2b3ef2173804746df8825fe", "split/test-00000-of-00001.parquet"),
+    # held-out concept family added by amendment A1 (before any held-out run): DBpedia-14 entity types
+    "dbpedia_train": ("fancyzhx/dbpedia_14", "9abd46cf7fc8b4c64290f26993c540b92aa145ac", "dbpedia_14/train-00000-of-00001.parquet"),
+    "dbpedia_test": ("fancyzhx/dbpedia_14", "9abd46cf7fc8b4c64290f26993c540b92aa145ac", "dbpedia_14/test-00000-of-00001.parquet"),
 }
 
 

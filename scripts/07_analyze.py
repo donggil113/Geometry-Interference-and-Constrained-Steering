@@ -41,13 +41,14 @@ out = ROOT / "results" / "analysis" / run
 out.mkdir(parents=True, exist_ok=True)
 df.to_parquet(out / "frame.parquet")
 
-tab = condition_table(df, by=("method", "alpha", "K"))
+tab = condition_table(df, by=("cfg", "method", "K", "alpha"))
 tab.to_csv(out / "table.csv", index=False)
 summary = {"run": run, "n_rows": int(len(df)), "concepts": sorted(df.cid.unique().tolist()), "budgets": {}}
 pd.set_option("display.width", 250)
 pd.set_option("display.max_columns", 30)
+DEG = -0.10  # degeneration floor on dDist2 (review finding: dNLL alone can be gamed by repetition)
 for b in [0.5, 1.0, 1.5]:
-    sel = budget_select(tab, b, by=("method", "K"))
+    sel = budget_select(tab, b, by=("cfg", "method", "K"), degeneration_floor=DEG)
     sel = sel.sort_values("dC", ascending=False)
     sel.to_csv(out / f"budget_{b}.csv", index=False)
     best_per_method = sel.sort_values("dC", ascending=False).groupby("method").head(1)
@@ -58,7 +59,7 @@ for b in [0.5, 1.0, 1.5]:
                            "int_new_active_per_pos", "int_ms_per_pos"]].round(3).to_string(index=False))
 
 # per-concept view at the primary budget
-sel = budget_select(tab, B, by=("method", "K"))
+sel = budget_select(tab, B, by=("cfg", "method", "K"), degeneration_floor=DEG)
 best = sel.sort_values("dC", ascending=False).groupby("method").head(1)
 pc = []
 for _, r in best.iterrows():
@@ -71,13 +72,19 @@ print(f"\n=== per-concept dC at budget {B} ===")
 print(pcd.round(3).to_string())
 summary["per_concept_dC_at_budget"] = pcd.round(4).to_dict()
 
-# internal (encoder self-consistency) vs behavior: rank correlation across all (method, K, alpha) conditions
+# internal (encoder self-consistency) vs behavior, stratified by alpha (pooling over alpha would let steering
+# strength drive the correlation): Spearman across (method config, concept) cells within each alpha
 from scipy.stats import spearmanr
 
-cc = tab[tab.method.isin(["dec", "enc", "pinv", "ridge", "dec_proj", "pinv_fs", "dec_proj_fs", "opt"])]
-rho_tg = spearmanr(cc["int_tgt_gain"], cc["dC"]).correlation
-rho_p = spearmanr(cc["int_p_rel_change"], cc["dNLL"]).correlation
-rho_new = spearmanr(cc["int_new_active_per_pos"], cc["dNLL"]).correlation
-summary["internal_vs_behavior_spearman"] = dict(tgt_gain_vs_dC=rho_tg, p_rel_change_vs_dNLL=rho_p, new_active_vs_dNLL=rho_new)
-print("\ninternal vs behavior (Spearman over SAE conditions):", summary["internal_vs_behavior_spearman"])
+sae_methods = ["dec", "enc", "pinv", "ridge", "dec_proj", "pinv_fs", "dec_proj_fs", "opt"]
+cell = df[df.method.isin(sae_methods)].groupby(["cfg", "alpha", "cid"])[["int_tgt_gain", "int_p_rel_change", "int_new_active_per_pos", "dC", "dNLL"]].mean().reset_index()
+strat = {}
+for a, sub in cell.groupby("alpha"):
+    strat[str(a)] = dict(tgt_gain_vs_dC=spearmanr(sub.int_tgt_gain, sub.dC).correlation,
+                         p_rel_change_vs_dNLL=spearmanr(sub.int_p_rel_change, sub.dNLL).correlation,
+                         new_active_vs_dNLL=spearmanr(sub.int_new_active_per_pos, sub.dNLL).correlation, n=int(len(sub)))
+summary["internal_vs_behavior_spearman_by_alpha"] = strat
+print("\ninternal vs behavior, Spearman within alpha:")
+for a, v in strat.items():
+    print(f"  alpha={a}: tgt_gain~dC {v['tgt_gain_vs_dC']:+.2f}  pRel~dNLL {v['p_rel_change_vs_dNLL']:+.2f}  new~dNLL {v['new_active_vs_dNLL']:+.2f}  (n={v['n']})")
 save_json(summary, out / "summary.json")

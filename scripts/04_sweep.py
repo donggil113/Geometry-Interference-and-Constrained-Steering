@@ -14,7 +14,7 @@ import torch
 import n3  # noqa: F401
 from n3.concepts import load_splits
 from n3.data import ROOT, owt_texts
-from n3.evaluate import Condition, append_row, done_keys, run_condition
+from n3.evaluate import Condition, append_row, code_fingerprint, done_keys, equal_length_prompts, run_condition
 from n3.features import compute_setting_stats
 from n3.settings import load_setting
 
@@ -25,8 +25,9 @@ stats = compute_setting_stats(model, sae, setting)
 sp = load_splits()
 prompts = sp["prompts"][split]
 concepts = grid.get("concepts") or sp[f"{split}_concepts"]
-ptoks = model.to_tokens(prompts)
+ptoks, prompts = equal_length_prompts(model, prompts)
 assert ptoks.shape[1] == sp["prompt_tokens"] + 1 or setting.startswith("gemma"), ptoks.shape
+assert (ptoks[:, 0] == model.bos_id).all()
 util = []
 for t in owt_texts("utility"):
     tk = model.to_tokens([t])[0]
@@ -36,8 +37,16 @@ for t in owt_texts("utility"):
         break
 util_tokens = torch.stack(util)
 part = grid.get("part", "")
+down = None
+if grid.get("downstream"):  # independent internal readout: (capture layer, SAE release, SAE id)
+    from n3.saes import load_sae
+    lay, rel, sid = grid["downstream"]
+    d_sae = load_sae(rel, sid)[0]
+    d_sae.center_input = setting.startswith("gpt2")
+    down = (lay, d_sae)
 out = ROOT / "results" / "runs" / run / f"{setting}__{split}{('__' + part) if part else ''}.jsonl"
-have = done_keys(out)
+code = code_fingerprint()
+have = done_keys(out, code)
 
 conds = [Condition(setting, concepts[0], "none", 0.0)]
 extra = grid.get("extra", {})
@@ -48,13 +57,19 @@ for cid in concepts:
         for K in grid["Ks"]:
             for m in grid["methods"]:
                 conds.append(Condition(setting, cid, m, a, K=K, **extra))
+for spec in grid.get("explicit", []):  # explicit per-method operating points, e.g. frozen (method, K, alpha, extras)
+    for cid in concepts:
+        conds.append(Condition(setting, cid, **spec))
+seen = set()
+conds = [c for c in conds if not (c.key() in seen or seen.add(c.key()))]
 todo = [c for c in conds if c.key() not in have]
 print(f"{run} {setting} {split}: {len(conds)} conditions, {len(todo)} to run", flush=True)
 t0 = time.time()
 for i, c in enumerate(todo):
-    r = run_condition(model, sae, stats, c, ptoks, util_tokens)
+    r = run_condition(model, sae, stats, c, ptoks, util_tokens, down=down)
     r["split"] = split
     r["prompts"] = prompts
+    r["code"] = code
     append_row(out, r)
     if i % 10 == 0:
         el = time.time() - t0

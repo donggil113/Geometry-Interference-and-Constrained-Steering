@@ -5,8 +5,8 @@ the *same* sampling noise):
   dC      : judge P(target concept) - baseline P(target concept)
   dNLL    : Qwen2.5-0.5B conditional NLL(continuation | prompt) - baseline      (fluency cost, nats/token)
   dRel    : MiniLM cos(prompt, continuation) - baseline                         (prompt relevance)
-  protJS  : Jensen-Shannon divergence of the *other* family's judge distribution vs baseline
-            (topic steering -> emotion distribution should stay; emotion steering -> topic should stay)
+  protJS  : Jensen-Shannon divergence of a *protected* family's judge distribution vs baseline
+            (topic / entity steering -> emotion distribution should stay; emotion steering -> topic should stay)
   dDist2  : distinct-2 - baseline                                               (degeneration)
 Utility: dCE / KL on held-out OWT text.  Internal (encoder self-consistency): tgt_gain, p_rel_change,
 new_active_per_pos -- reported separately, never mixed into behavioral endpoints.
@@ -40,11 +40,17 @@ def per_prompt_frame(rows, scores, baseline_key) -> pd.DataFrame:
         if fam == "topic":
             C, C0 = tp[:, lab], bt[:, lab]
             prot = _js(ep, be)
+        elif fam == "entity":
+            xp, bx = np.array(s["entity_probs"]), np.array(b["entity_probs"])
+            C, C0 = xp[:, lab], bx[:, lab]
+            prot = _js(ep, be)  # entity steering: the emotion distribution should stay
         else:
             C, C0 = ep[:, lab], be[:, lab]
             prot = _js(tp, bt)
         n = len(C)
-        base = dict(key=r["key"], setting=c["setting"], cid=c["cid"], family=fam, method=c["method"], alpha=c["alpha_mult"],
+        cfg = (f'{c["method"]}|K{c["K"]}|P{c["protect_topm"]}|r{c["ridge_rel"]}|fs{c["fs_rounds"]}|'
+               f'mp{c["opt_mu_p"]}|mn{c["opt_mu_new"]}|d{c["max_density"]}')
+        base = dict(key=r["key"], cfg=cfg, split=r.get("split"), setting=c["setting"], cid=c["cid"], family=fam, method=c["method"], alpha=c["alpha_mult"],
                     K=c["K"], protect_topm=c["protect_topm"], ridge_rel=c["ridge_rel"], fs_rounds=c["fs_rounds"],
                     opt_mu_p=c["opt_mu_p"], opt_mu_new=c["opt_mu_new"],
                     **{k: v for k, v in r["utility"].items() if k != "ce_clean"}, **{f"int_{k}": v for k, v in r["internal"].items()},
@@ -64,51 +70,87 @@ METRICS = ["C", "dC", "dNLL", "dRel", "protJS", "dDist2", "dce", "kl", "down_p_r
            "int_n_constraints", "int_ms_per_pos"]
 
 
-def condition_table(df: pd.DataFrame, by=("method", "alpha", "K")) -> pd.DataFrame:
+def condition_table(df: pd.DataFrame, by=("cfg", "method", "K", "alpha")) -> pd.DataFrame:
+    """Concept-balanced means: average over prompts within concept, then over concepts.
+    Always keyed by the full config id ('cfg') so different hyper-parameter variants are never pooled."""
     by = list(by)
-    g = df.groupby(by + ["cid"])[[m for m in METRICS if m in df]].mean().reset_index()
-    return g.groupby(by)[[m for m in METRICS if m in g]].mean().reset_index()
+    if "cfg" not in by:
+        by = ["cfg"] + by
+    cols = [m for m in METRICS if m in df]
+    g = df.groupby(by + ["cid"], dropna=False)[cols].mean().reset_index()
+    out = g.groupby(by, dropna=False)[cols].mean().reset_index()
+    out["n_concepts"] = g.groupby(by, dropna=False).size().values
+    return out
 
 
-def budget_select(tab: pd.DataFrame, budget: float, cost="dNLL", gain="dC", by=("method", "K")) -> pd.DataFrame:
-    """For each method config, pick the alpha with max `gain` subject to `cost` <= budget (alpha=0 allowed)."""
+def budget_select(tab: pd.DataFrame, budget: float, cost="dNLL", gain="dC", by=("cfg", "method", "K"),
+                  degeneration_floor: float | None = None) -> pd.DataFrame:
+    """For each method config pick the alpha with max `gain` subject to `cost` <= budget (and, if given,
+    dDist2 >= degeneration_floor).  alpha = 0 (gain 0, cost 0) is always an admissible candidate."""
     out = []
-    for key, sub in tab.groupby(list(by)):
+    for key, sub in tab.groupby(list(by), dropna=False):
         ok = sub[sub[cost] <= budget]
-        if len(ok) == 0:
-            best = dict(zip(by, key if isinstance(key, tuple) else (key,)), alpha=0.0, **{gain: 0.0, cost: 0.0})
+        if degeneration_floor is not None and "dDist2" in ok:
+            ok = ok[ok["dDist2"] >= degeneration_floor]
+        keyd = dict(zip(by, key if isinstance(key, tuple) else (key,)))
+        if len(ok) == 0 or ok[gain].max() <= 0:
+            best = dict(keyd, alpha=0.0, **{gain: 0.0, cost: 0.0}, selected_zero=True)
         else:
-            best = ok.loc[ok[gain].idxmax()].to_dict()
+            best = dict(ok.loc[ok[gain].idxmax()].to_dict(), selected_zero=False)
         out.append(best)
     return pd.DataFrame(out)
 
 
+def _paired_matrix(df, sel, metric):
+    m = np.ones(len(df), bool)
+    for k, v in sel.items():
+        m &= np.isclose(df[k].values, v) if isinstance(v, float) else (df[k] == v).values
+    sub = df[m]
+    if len(sub) == 0:
+        raise ValueError(f"empty arm {sel}")
+    dup = sub.duplicated(subset=["cid", "prompt"]).any()
+    if dup:
+        raise ValueError(f"arm {sel} has duplicate (cid, prompt) cells -- configs would be pooled")
+    return sub.pivot(index="cid", columns="prompt", values=metric)
+
+
+def signflip_test(per_concept_diffs: np.ndarray) -> float:
+    """Exact two-sided sign-flip randomization test on concept-level mean differences (2^n flips)."""
+    d = np.asarray(per_concept_diffs, float)
+    n = len(d)
+    obs = abs(d.mean())
+    signs = np.array(np.meshgrid(*[[-1, 1]] * n)).reshape(n, -1).T  # (2^n, n)
+    null = np.abs((signs * d).mean(1))
+    return float((null >= obs - 1e-12).mean())
+
+
 def cluster_bootstrap_diff(df: pd.DataFrame, sel_a: dict, sel_b: dict, metric="dC", n_boot=5000, seed=0):
-    """Paired difference mean(metric | a) - mean(metric | b) over (cid, prompt), bootstrap resampling
-    concepts and prompts (two-way cluster bootstrap)."""
+    """Paired difference mean(metric | a) - mean(metric | b) over (cid, prompt).
+    Primary inference: exact concept-level sign-flip test (p_signflip).  Sensitivity: two-way cluster
+    bootstrap over concepts and prompts (percentile CI)."""
     rng = np.random.RandomState(seed)
-
-    def pick(sel):
-        m = np.ones(len(df), bool)
-        for k, v in sel.items():
-            m &= (df[k] == v).values
-        return df[m].pivot_table(index="cid", columns="prompt", values=metric)
-
-    A, B = pick(sel_a), pick(sel_b)
+    A, B = _paired_matrix(df, sel_a, metric), _paired_matrix(df, sel_b, metric)
     cids = sorted(set(A.index) & set(B.index))
+    if len(cids) < len(set(A.index) | set(B.index)):
+        raise ValueError("arms cover different concepts")
     A, B = A.loc[cids], B.loc[cids]
     D = (A - B).values  # (concepts, prompts)
+    if np.isnan(D).all():
+        raise ValueError("all-NaN differences")
     est = float(np.nanmean(D))
+    per_c = np.nanmean(D, 1)
     nc, npm = D.shape
     boots = np.empty(n_boot)
     for b in range(n_boot):
         ci = rng.randint(0, nc, nc)
         pi = rng.randint(0, npm, npm)
         boots[b] = np.nanmean(D[np.ix_(ci, pi)])
+    boots = boots[np.isfinite(boots)]
     lo, hi = np.percentile(boots, [2.5, 97.5])
-    p_two = float(min(1.0, 2 * min((boots <= 0).mean(), (boots >= 0).mean())))
-    return dict(est=est, lo=float(lo), hi=float(hi), p_two_sided=p_two, n_concepts=nc, n_prompts=npm,
-                per_concept=dict(zip(cids, np.nanmean(D, 1).tolist())))
+    p_boot = float(min(1.0, 2 * min((boots <= 0).mean(), (boots >= 0).mean())))
+    return dict(est=est, lo=float(lo), hi=float(hi), p_signflip=signflip_test(per_c), p_boot_two_sided=p_boot,
+                n_concepts=nc, n_prompts=npm, n_concepts_positive=int((per_c > 0).sum()),
+                per_concept=dict(zip(cids, per_c.tolist())))
 
 
 def holm(pvals: dict, alpha=0.05) -> dict:

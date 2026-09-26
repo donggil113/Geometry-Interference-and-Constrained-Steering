@@ -27,10 +27,10 @@ diag_df = pd.read_csv(ROOT / "results" / "realizability" / f"per_concept_{settin
 frames = [pd.read_parquet(ROOT / "results" / "analysis" / r / "frame.parquet") for r in runs]
 df = pd.concat(frames)
 df = df[df.setting == setting]
+assert set(df.split.unique()) == {"test"} if "split" in df else True, "H2 outcomes must all come from held-out prompts"
 outc = {}
 for m in [proto["h2"]["outcome_method"], "dec", "diffmean"]:
-    a, k = proto["alpha_by_method"][m], proto["K_by_method"][m]
-    sub = df[(df.method == m) & np.isclose(df.alpha, a) & (df.K == k)]
+    sub = df[(df.cfg == proto["cfg_by_method"][m]) & np.isclose(df.alpha, proto["alpha_by_method"][m])]
     outc[m] = sub.groupby("cid")["dC"].mean()
 
 # geometry-only baselines from the SAE weights (Khan et al.-style decoder crowding) and feature frequency

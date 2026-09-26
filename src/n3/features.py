@@ -51,7 +51,15 @@ def per_text_means(model, sae, texts, seq_len=64, bs=16):
 def compute_setting_stats(model, sae, setting: str, n_per_concept=300, n_owt=400, seq_len=64):
     out_path = CACHE / setting / "featstats.pt"
     if out_path.exists():
-        return torch.load(out_path)
+        stats = torch.load(out_path)
+        missing = [c["cid"] for c in all_concepts() if c["cid"] not in stats["F"]]
+        if missing:  # e.g. the held-out entity family added by amendment A1
+            ct = concept_texts(n_per_concept)
+            for cid in missing:
+                stats["F"][cid], stats["H"][cid] = per_text_means(model, sae, ct[cid], seq_len)
+                print("stats (added)", setting, cid, flush=True)
+            torch.save(stats, out_path)
+        return stats
     out_path.parent.mkdir(parents=True, exist_ok=True)
     ct = concept_texts(n_per_concept)
     Fm, Hm = {}, {}

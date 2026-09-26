@@ -17,6 +17,7 @@ JUDGE_REVISIONS = {
     "MoritzLaurer/deberta-v3-base-zeroshot-v2.0": "8e7e5af5983a0ddb1a5b45a38b129ab69e2258e8",
     "Qwen/Qwen2.5-0.5B": "060db6499f32faf8b98477b0a26969ef7d8b9987",
     "sentence-transformers/all-MiniLM-L6-v2": "1110a243fdf4706b3f48f1d95db1a4f5529b4d41",
+    "fabriceyhc/bert-base-uncased-dbpedia_14": "1fbfc3deaa280fcf16372746ca21363313357376",
 }
 
 
@@ -47,8 +48,13 @@ class EmotionJudge(ClassifierJudge):
         super().__init__("bhadresh-savani/distilbert-base-uncased-emotion")
 
 
+class EntityJudge(ClassifierJudge):
+    def __init__(self):
+        super().__init__("fabriceyhc/bert-base-uncased-dbpedia_14")
+
+
 class NLIJudge:
-    TEMPLATES = {"topic": "This text is about {}.", "emotion": "This text expresses {}."}
+    TEMPLATES = {"topic": "This text is about {}.", "emotion": "This text expresses {}.", "entity": "This text is about a {}."}
 
     def __init__(self):
         from transformers import AutoModelForSequenceClassification, AutoTokenizer
