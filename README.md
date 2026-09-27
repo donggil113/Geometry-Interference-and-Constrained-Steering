@@ -5,7 +5,29 @@ non-target (protected) features **P** are preserved? When that realizability is 
 corrected, does it help **independent downstream behavior**, beyond the SAE encoder's own scores and
 beyond generic (SAE-free) steering?
 
-Status and verdict: see [`docs/04_report.md`](docs/04_report.md) (written after the held-out run).
+## Verdict: **NO_GO**
+
+The result is pre-registered (freeze commit `4282fb5`) and was independently re-verified. Full report:
+[`docs/04_report.md`](docs/04_report.md).
+
+- **Inside the SAE, (T, P) edits are realizable and cheap** (`docs/03_realizability.md`).
+  - For ReLU and JumpReLU, the exact finite-step QP raises the targets while keeping *every* active
+    feature fixed and *every* inactive feature off, at 4–15% of ‖h‖. It is feasible in 100% of cases.
+  - Local Jacobian solutions flip 9–74 gates and break 3–11% of the way along the step. The exact
+    correction adds only 1–8% norm.
+  - Under TopK+LayerNorm, full preservation is structurally impossible (slot eviction) in >99% of
+    requests.
+- **The correction does not help behavior** (GPT-2 small L6, jb ReLU SAE, 16 held-out concepts × 48
+  held-out prompts; independent judges).
+  - The corrected edit `dec_proj` removes all protected-feature change inside the SAE. It is **not shown
+    better than plain decoder steering**: ΔC +0.013, p = 0.37. The same holds against DiffMean (p = 0.32).
+  - At matched norm and at matched fluency, DiffMean is ahead (secondary / post hoc).
+  - A random protected set behaves identically.
+  - Encoder-score-maximizing edits steer *worse*.
+  - The null replicates on a held-out TopK SAE: −0.010, p = 0.34.
+- **The realizability diagnostic does not predict steerability.** ρ = +0.05 over 24 concepts. Generic
+  DiffMean steerability predicts it better (ρ = +0.51).
+- **No SAE retraining is warranted.**
 Pre-registered protocol: [`docs/02_protocol.md`](docs/02_protocol.md) and `configs/protocol.json`.
 Literature audit (step 1): [`docs/01_literature_audit.md`](docs/01_literature_audit.md).
 
@@ -38,7 +60,12 @@ python scripts/01_splits_and_judges.py           # frozen splits; judge validati
 python scripts/02_feature_stats.py gpt2_relu_jb_L6 gpt2_topk_oai_L6
 python scripts/04_sweep.py dev1 gpt2_relu_jb_L6 dev '<grid json>'   # dev grid
 python scripts/06_score.py dev1 && python scripts/07_analyze.py dev1
-python scripts/05_realizability.py gpt2_relu_jb_L6                 # steps 4-5
+python scripts/08_freeze_protocol.py dev2                           # freeze -> configs/protocol.json
+python scripts/12_run_test.py primary test1 && python scripts/06_score.py test1 --nli-decision-arms
+python scripts/07_analyze.py test1 && python scripts/11_decide.py test1 gpt2_relu_jb_L6   # pre-registered H1
+python scripts/05_realizability.py gpt2_relu_jb_L6 48 && python scripts/09_realizability_summary.py gpt2_relu_jb_L6  # steps 4-5
+python scripts/10_h2_diagnosis.py gpt2_relu_jb_L6 test1 h2test      # H2
+python scripts/14_runtime.py && python scripts/15_report_numbers.py && python scripts/13_figures.py test1 topk1
 pytest -q tests/
 ```
 
