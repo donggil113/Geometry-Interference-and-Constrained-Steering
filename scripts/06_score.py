@@ -49,7 +49,26 @@ if nli_arms:
         score_rows([r for r in need if r["cond"]["method"] != "none"], rows[0]["prompts"], judges, path.with_suffix(".scores.jsonl"), use_nli=True)
         print("decision arms scored:", path.name, len(need), flush=True)
     print("DECISION_ARMS_DONE", flush=True)
-for path, rows in files:
-    s = score_rows(rows, rows[0]["prompts"], {k: v for k, v in judges.items() if k != "nli"} if nli_arms else judges,
-                   path.with_suffix(".scores.jsonl"), use_nli=nli)
-    print(path.name, len(rows), "rows,", len(s), "scored", flush=True)
+def priority(r):
+    """Scoring order after the decision arms: controls / reference, norm-matched points, other frozen points, rest."""
+    if not nli_arms:
+        return 0
+    c = r["cond"]
+    m, a = c["method"], float(c["alpha_mult"])
+    fa = float(proto["alpha_by_method"].get(m, -1))
+    if m in proto.get("controls", []) + proto.get("reference_methods", []):
+        return 0
+    if abs(a - float(proto["alpha_by_method"][proto["primary_corrected"]])) < 1e-9 and m in proto["h1_comparators"]:
+        return 1
+    if abs(a - fa) < 1e-9:
+        return 2
+    return 3
+
+
+nonli = {k: v for k, v in judges.items() if k != "nli"} if nli_arms else judges
+for level in sorted({priority(r) for _, rows in files for r in rows}):
+    for path, rows in files:
+        todo = [r for r in rows if priority(r) == level]
+        s = score_rows(todo, rows[0]["prompts"], nonli, path.with_suffix(".scores.jsonl"), use_nli=nli)
+        print(f"priority {level}:", path.name, len(todo), "rows,", len(s), "scored in file", flush=True)
+print("ALL_DONE", flush=True)
