@@ -26,14 +26,14 @@ raw files. H2, TopK, the secondary analyses and the controls were recomputed by
   - It removes all protected-feature change inside the SAE. It is **not shown better than plain
     decoder steering**: ΔC +0.013, CI [−0.033, +0.058], p = 0.37.
   - With the jb ReLU SAE it is not shown better than DiffMean either (p = 0.32). At matched norm
-    (secondary, uncorrected; Holm-adjusted p = 0.064) and at matched fluency (post hoc), DiffMean is
-    ahead.
+    DiffMean is nominally ahead (−0.115, uncorrected p = 0.032; Holm-adjusted 0.064; secondary), and
+    at matched fluency its curve lies above both SAE curves (post hoc, untested).
   - A count-matched random protected set is not distinguishable in ΔC (+0.019, p = 0.16).
   - Encoder-score-maximizing edits (enc, pinv, ridge) steer worse than `dec`. So do the
     constraint-enforcing arms (`dec_proj_fs`, `pinv_fs`, `opt`; exploratory).
   - The ΔC null replicates on one held-out TopK SAE at the same hook (−0.010, p = 0.34). This is a weak
     test, because the correction barely changes Tier 0 there. With that SAE the DiffMean relation
-    reverses: the decoder arms beat DiffMean (+0.111, p = 0.015).
+    reverses: `dec_proj` beats DiffMean (+0.111, p = 0.015; `dec` − DiffMean was not tested).
 - **The realizability diagnostic shows no detectable association with steerability.** ρ = +0.05,
   CI [−0.32, +0.41], over 24 concepts. The highest point estimate is the concept's own DiffMean ΔC
   (ρ = +0.51). That was not tested against the other predictors.

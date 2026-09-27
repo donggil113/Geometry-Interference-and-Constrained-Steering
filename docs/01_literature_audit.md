@@ -788,9 +788,10 @@ N3 responded to the critic as follows. See `docs/02_protocol.md` and `docs/04_re
 
 **Adopted:**
 - the minimal decisive arm set, with the extended arms (SAE-TS, FGAA, COAST, S&P, RePS) deferred.
-  **Exception:** the Err(h)-clamping arm in the critic's minimal set was *not* run. Neither were the
-  other §9 requirements listed in `docs/04_report.md` §9 item 9 (P3 SAE-A / output-score selection,
-  P4 CE/KL matching, P7–P12 extras, the N15 mediation test).
+  **Exception:** the Err(h)-clamping arm in the critic's minimal set was *not* run (`docs/04_report.md`
+  §9 item 2). The exact QP was run only as a Tier-0 diagnostic, not as a steering arm; `ridge` stands
+  in for "ridge/QP". The audit requirements in `docs/04_report.md` §9 item 9 were not run either (P3
+  SAE-A / output-score selection, P4 CE/KL matching, P7–P12 extras, and the §10 N15 mediation test).
 - norm-matched random SAE decoder rows
 - a count-matched random-protected-set projection control
 - a pre-registered T and P construction
@@ -802,8 +803,8 @@ N3 responded to the critic as follows. See `docs/02_protocol.md` and `docs/04_re
 - a timestamped pre-registration commit
 - geometry-predictor baselines for H2: max decoder cosine and neighbor density
 
-**Not feasible here, and stated as limitations:** (the full list of audit requirements that were not
-executed is in `docs/04_report.md` §9 item 9)
+**Not feasible here, and stated as limitations:** (audit requirements that were not executed are listed
+in `docs/04_report.md` §9 items 1–3 and 9; the Braun/Billa predictors are listed only here)
 - the gpt-4o-mini judge and the Gemma-2-2B-IT AxBench reproduction (no API key, gated model, CPU only)
 - SAE-TS / FGAA / COAST / RePS
 - the Braun and Billa (LAP) predictors

@@ -6,8 +6,9 @@
   not supported.
 - The H1 decision (primary contrasts and guards) was independently re-verified from the raw files.
 - H2, TopK, the secondary analyses and the controls were recomputed by `scripts/15_report_numbers.py`
-  (`results/analysis/report_numbers.json`). They were also audited for consistency with the text, but
-  not independently re-derived.
+  (`results/analysis/report_numbers.json`). The exceptions are the post hoc per-concept matched-fluency
+  tests (§5.4) and the TopK matched-ΔNLL/ΔCE interpolation (§6), which were computed ad hoc. All of
+  these were audited for consistency with the text, but not independently re-derived.
 
 ## 0. Verdict (pre-registered decision)
 
@@ -48,7 +49,7 @@
      p = 0.34. This is a weak test:
      - the correction barely changes Tier 0 there (protected change 0.20 → 0.17);
      - only the decision arms and controls were transferred;
-     - with that SAE the decoder arms *beat* DiffMean under the rule (see §6).
+     - with that SAE `dec_proj` *beats* DiffMean under the rule (see §6).
 3. **H2: the realizability diagnostic shows no detectable association with steerability.**
    - Exact QP cost vs held-out ΔC over 24 concepts: ρ = +0.05, CI [−0.32, +0.41]. A moderate positive
      association is not excluded.
@@ -69,7 +70,7 @@
 
 | risk | status |
 |---|---|
-| N1, parity with DiffMean | fails |
+| N1, no advantage over DiffMean at matched ‖Δh‖ | triggered (secondary A4: −0.115, CI [−0.223, −0.013]) |
 | N2, gains only in Tier 0 | met in spirit: gains in Tier 0 plus a small Tier-1 effect; none in Tier 2 |
 | N3, selection confound | controlled: same T for every SAE arm |
 | N5, pinv/ridge repeat SAE-TS | yes; pinv and ridge fall below dec |
@@ -80,7 +81,8 @@
 | N11, loss of instruct/fluency/utility | not better than dec |
 | N12, collateral vs random | n/a (no gain) |
 | N14, runtime without payoff | yes: 65–1,800× cost, no Tier-2 gain |
-| N4, N10, N13, N15 | not run (N13: infeasibility is not dominant, see Q1) |
+| N13, infeasibility dominates | not for ReLU/JumpReLU; under TopK+LN full P preservation is infeasible in >99% of requests, reported as a scope finding (Q1, §6) |
+| N4, N10, N15 | not run |
 
 ## 1. What was done (mapping to the brief)
 
@@ -240,8 +242,8 @@ Paired ΔC against `dec`, exploratory and uncorrected:
 | arm | ΔC − dec | p | concepts above dec |
 |---|---|---|---|
 | dec_proj_fs | −0.093 | 0.004 | 3/16 |
-| ridge | −0.107 | 0.014 | 3/16 |
-| pinv | −0.118 | 0.009 | 2/16 |
+| ridge | −0.106 | 0.014 | 3/16 |
+| pinv | −0.118 | 0.008 | 2/16 |
 | enc | −0.169 | 0.002 | 2/16 |
 | pinv_fs | −0.183 | 0.002 | 4/16 |
 | opt | −0.287 | 0.0002 | 2/16 |
@@ -277,8 +279,9 @@ All of these arms also lie below dec's held-out fluency curve. `opt` reached lit
 
 Improvements are therefore confined to SAE-internal readouts: fully at the edited layer (Tier 0), with
 a small P-specific effect in the layer-8 SAE (Tier 1). No behavioral (Tier 2) metric moves detectably;
-the upper 95% bound against `dec` is +0.058. NO_GO follows from the pre-registered H1 rule and from
-parity with DiffMean and with the random-P control, both parts of the brief's rule.
+the upper 95% bound against `dec` is +0.058. NO_GO follows from the pre-registered H1 rule. The
+correction is also not shown to be better than DiffMean or than the random-P control, both parts of
+the brief's rule; equivalence is not shown either.
 
 **5.4 Against the generic baseline (secondary and exploratory, not part of the rule).**
 
@@ -318,8 +321,8 @@ parity with DiffMean and with the random-P control, both parts of the brief's ru
   - Per concept, `dec_proj` − `dec` is −0.014 (p = 0.21) at 0.5 nats and −0.000 (p = 0.97) at 1.0 nats.
   - `dec_proj` − DiffMean is −0.093 (p = 0.048) and −0.106 (p = 0.08).
   - Two points of context:
-    - On dev, `dec_proj` and DiffMean were at parity at matched ΔNLL (+0.012, +0.011, +0.003;
-      p ≥ 0.83).
+    - On dev, `dec_proj` and DiffMean were not distinguishable at matched ΔNLL (at 0.44 / 0.65 /
+      0.875 nats: +0.012, +0.011, +0.003; p ≥ 0.83; n = 8 concepts).
     - From dev to held-out, the SAE arms' ΔNLL rose (dec_proj 0.65 → 0.875) while DiffMean's fell
       (0.49 → 0.44).
 
@@ -384,13 +387,14 @@ parity with DiffMean and with the random-P control, both parts of the brief's ru
 - **Even the Tier-0 benefit mostly disappears under TopK+LN.** Protected change drops only from 0.20 to
   0.17. This is consistent with the TopK slot conflict in `docs/03_realizability.md` and with LayerNorm
   coupling; the two were not separated. By construction of P, the slot conflict equals the share of
-  positions where T starts inactive, 99.3–100%.
-- **Against DiffMean, the relation reverses on this SAE.** Under the pre-registered rule, the decoder
-  arms *beat* DiffMean (+0.111, p = 0.015, Holm-rejected, NLI-concordant), at higher ΔNLL and ΔCE.
-  Interpolating the shared DiffMean curve, they are not behind DiffMean at matched ΔNLL (≈ 0.40 vs 0.36)
-  and are roughly at parity at matched ΔCE. The DiffMean conclusion of §5 is therefore specific to the
-  jb ReLU SAE. The gain over DiffMean here belongs to plain `dec` just as much; it is not due to the
-  correction.
+  positions where at least one target feature starts inactive, 99.3–100% (all targets inactive:
+  98–99%).
+- **Against DiffMean, the relation reverses on this SAE.** Under the pre-registered rule, `dec_proj`
+  *beats* DiffMean (+0.111, p = 0.015, Holm-rejected, NLI-concordant), at higher ΔNLL and ΔCE.
+  Interpolating the shared DiffMean curve (ad hoc), the decoder arms are not behind DiffMean at matched
+  ΔNLL (≈ 0.40 vs 0.36) and are roughly level with it at matched ΔCE. The DiffMean conclusion of §5 is
+  therefore specific to the jb ReLU SAE. `dec` − DiffMean was not tested, but `dec`'s level is as high
+  (ΔC 0.410 vs `dec_proj` 0.400 and DiffMean 0.289), so the gain is not attributable to the correction.
 - **The rule's result on this setting is also NO_GO:** `dec` is not rejected.
 
 ## 7. H2: does the realizability diagnosis predict behavior?
@@ -459,8 +463,8 @@ Measured on an idle CPU (4 threads) with `scripts/14_runtime.py`, each method at
   arm that enforces more of (T, P=, P0) than `dec_proj` gives a lower ΔC than `dec` at its frozen point
   and lies below dec's held-out fluency curve. The exact QP of `docs/03` was not run as a steering arm.
 - No claim that DiffMean is generally better than SAE steering. On the jb ReLU SAE it is ahead at
-  matched norm and fluency (secondary / post hoc). On the TopK SAE the decoder arms beat it at the
-  frozen points.
+  matched norm and fluency (secondary / post hoc). On the TopK SAE `dec_proj` beats it at the frozen
+  points (`dec` − DiffMean was not tested).
 
 **Deviations from the brief and the literature protocol** (see also the addendum to
 `docs/01_literature_audit.md`).
@@ -532,8 +536,8 @@ Measured on an idle CPU (4 threads) with `scripts/14_runtime.py`, each method at
   downstream correction [18].
 - **Null-space construction.** `dec_proj`'s construction follows AlphaEdit (arXiv:2410.02355) and
   AlphaSteer [20].
-- **Sanity controls.** Critic-found 2026 work reports SAE steering indistinguishable from random
-  perturbation in some settings (arXiv:2603.18353), and no method consistently beating prompting
+- **Sanity controls.** Critic-found 2026 work reports SAE feature steering with zero effect, and
+  concept-bottleneck steering indistinguishable from random perturbation (arXiv:2603.18353), and no method consistently beating prompting
   (MAxBench, arXiv:2609.13072). Our random-row controls clearly separate from the concept features
   (+0.30), so that stronger failure mode is *not* reproduced here.
 - **Weak random controls.** da Silva & Heimersheim (arXiv:2606.24964) report activation plateaus
@@ -541,6 +545,7 @@ Measured on an idle CPU (4 threads) with `scripts/14_runtime.py`, each method at
   `random` comparator here is such a control. The specificity statements therefore rest on the
   random-decoder-row and random-protected-set controls, not on `random`.
 - **What this work adds, within its scale.**
-  - An exact finite-step (T, P=, P0) realizability analysis across three SAE architectures.
+  - An exact finite-step (T, P=, P0) realizability analysis for ReLU and JumpReLU SAEs, plus a
+    first-order, forward-checked analysis of TopK+LN.
   - Pre-registered held-out tests, with specificity controls, in which this Tier-0 realizability and
     its first-order correction are not shown to translate into independent behavior.

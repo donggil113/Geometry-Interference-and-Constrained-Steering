@@ -19,6 +19,7 @@ import n3  # noqa: F401  (sets HF_HOME)
 from n3.data import DATA_FILES, ROOT, owt_texts, load_df, save_json
 from n3.models import HFModel, TLModel
 from n3.saes import check_against_saelens, load_sae
+from n3.settings import MEAN_INVARIANT
 
 torch.set_grad_enabled(False)
 api = HfApi()
@@ -32,6 +33,14 @@ SETTINGS = {
                                      sae_id="layer_12_width_16k_l0_medium", sae_repo="google/gemma-scope-2-270m-pt", layer=12,
                                      published_l0=60),
 }
+
+
+# Checkpoint validation below uses TransformerLens directly; every experiment ran on the equivalent HF backend.
+GPT2_RUN_BACKEND = ("hf transformers AutoModelForCausalLM (openai-community/gpt2 @ model_revision); read/edit at transformer.h[5] "
+                    "output (== TransformerLens blocks.6.hook_resid_pre), mean-centred (== TL center_writing_weights). SAE reads "
+                    "h - mean(h); every edit is projected onto 1-perp before norm matching (GPT-2 is mean-invariant). Validated "
+                    "against TL HookedTransformer.from_pretrained('gpt2') default processing in "
+                    "results/validation/hf_vs_tl_gpt2_backend.json (initial checkpoint validation used TL directly).")
 
 
 def repo_sha(repo, repo_type="model"):
@@ -101,10 +110,10 @@ def main():
         cfg = SETTINGS[name]
         report[name] = validate(name, cfg, gpt2, texts)
         pinned["settings"][name] = dict(
-            model="gpt2 (HF openai-community/gpt2)", model_revision=gpt2_sha, backend="transformer_lens HookedTransformer.from_pretrained('gpt2') default processing (fold_ln, center_writing_weights, center_unembed)",
+            model="gpt2 (HF openai-community/gpt2)", model_revision=gpt2_sha, backend=GPT2_RUN_BACKEND,
             sae_release=cfg["release"], sae_id=cfg["sae_id"], sae_repo=cfg["sae_repo"], sae_repo_revision=repo_sha(cfg["sae_repo"]),
             edit_hook=cfg["hook"], sae_kind=report[name]["sae_kind"], normalization=report[name]["normalization"],
-            prepend_bos=True, bos_position_edited=False,
+            prepend_bos=True, bos_position_edited=False, center_input=name in MEAN_INVARIANT,
         )
         print(name, report[name], flush=True)
     del gpt2

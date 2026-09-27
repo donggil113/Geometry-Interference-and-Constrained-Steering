@@ -67,7 +67,7 @@ No global guarantee is claimed for this setting.
 | binding (P0) constraints at the QP optimum | 8 | 20 |
 | decoder steering to reach the same target: c_dec / ‖h‖ | 0.11 | 0.28 |
 | decoder collateral: ‖Δf_P‖ / ‖f_P‖, new features | 0.09, 8 | 0.24, 43 |
-| feasible within B; QP converged; max verified T / P error (float32) | 100%; 100%; ≤2e-5 / ≤6e-5 | 100%; 100%; ≤3e-5 / ≤6e-5 |
+| feasible within B; QP converged; max verified T / P error (float32) | 100%; 100%; ≤2e-5 / ≤6e-5 | 100%; 100%; ≤3e-5 / ≤7e-5 |
 
 ### Reading
 
@@ -76,7 +76,8 @@ No global guarantee is claimed for this setting.
      and keeping all ~24.5k inactive features off costs 8% (K = 1) to 14% (K = 3) of the residual
      norm.
    - Preserving the active features (P=) costs only 7–9% extra norm, because the geometric
-     interference between T and the active set is small. The full (P=, P0) protection costs 8–12%.
+     interference between T and the active set is small. The full (P=, P0)
+     protection costs 8–11% (median per-request c_qp / c_free).
 2. **The linear (Jacobian/pseudoinverse) solution is not finite-step valid.**
    - It switches on a median of 9 (K = 1) or 27 (K = 3) unprotected features.
    - The first gate flip occurs about 5–11% of the way along the step. The local Taylor model is
@@ -109,7 +110,8 @@ No global guarantee is claimed for this setting.
 ### Reading
 
 - Under TopK, "keep every active feature" is **structurally unrealizable**, whatever the budget.
-  - The target starts inactive in 98–99% of positions, and the k slots are full.
+  - All targets start inactive in 98–99% of positions, at least one does in 99.3–100%, and the k
+    slots are full.
   - Gauss–Newton hits every target and protected *pre-activation* exactly, yet 3–8 protected
     features are still evicted.
   - LayerNorm couples all features, so other features also move and enter the top-k.
@@ -149,7 +151,7 @@ No global guarantee is claimed for this setting.
    exactly feasible within budget for every ReLU request and for 95.5–97.5% of JumpReLU requests
    (the rest undetermined at float32 tolerance). The exception is TopK, where a combinatorial
    constraint (slot eviction) makes full preservation impossible. By construction of P, that
-   conflict equals the share of positions where T starts inactive. None of this is claimed as a
+   conflict equals the share of positions where at least one target starts inactive (99.3% / 100%). None of this is claimed as a
    theorem.
 2. **The informative quantities are finite-step properties.**
    - Local (Jacobian or pseudoinverse) solutions break after 3–11% of the step and flip 9–74 gates
