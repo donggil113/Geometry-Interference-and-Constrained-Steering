@@ -41,14 +41,25 @@ def pareto(run, setting, fname, title):
         xs = np.r_[0, t.dNLL.values]
         ys = np.r_[0, t.dC.values]
         ax.plot(xs, ys, color=COLOR[m], lw=2, marker="o", ms=5, label=LABEL[m], zorder=3)
-        ax.annotate(LABEL[m], (xs[-1], ys[-1]), textcoords="offset points", xytext=(6, 0), color=INK2, fontsize=9, va="center")
+        dy = {"dec": 8, prim: -9}.get(m, 0)  # keep the two nearly coincident end labels apart
+        ax.annotate(LABEL[m], (xs[-1], ys[-1]), textcoords="offset points", xytext=(6, dy), color=INK2, fontsize=9, va="center")
+    placed = []
     for m, cfg in proto["cfg_by_method"].items():
         if m in ("dec", "diffmean", prim, "prompt"):
             continue
         t = tab[(tab.cfg == cfg) & np.isclose(tab.alpha, proto["alpha_by_method"][m])]
         if len(t):
             ax.scatter(t.dNLL, t.dC, s=36, color=GRAY, zorder=2, edgecolor=SURF, linewidth=1.5)
-            ax.annotate(m, (float(t.dNLL.iloc[0]), float(t.dC.iloc[0])), textcoords="offset points", xytext=(5, -9), color=INK2, fontsize=8)
+            x0, y0 = float(t.dNLL.iloc[0]), float(t.dC.iloc[0])
+            placed.append((m, x0, y0))
+    # label the gray cluster in a column to the right of the budget line, with thin leader lines
+    col = sorted([p for p in placed if 0.6 < p[1] < 1.2], key=lambda p: -p[2])
+    for i, (m, x0, y0) in enumerate(col):
+        ax.annotate(m, (x0, y0), xytext=(1.12, 0.30 - 0.035 * i), textcoords="data", color=INK2, fontsize=8, va="center",
+                    arrowprops=dict(arrowstyle="-", color=GRAY, lw=0.6, shrinkA=0, shrinkB=3))
+    for m, x0, y0 in placed:
+        if not (0.6 < x0 < 1.2):
+            ax.annotate(m, (x0, y0), textcoords="offset points", xytext=(6, -9), color=INK2, fontsize=8)
     ax.axvline(proto["B_NLL"], color=INK2, lw=1, ls="--")
     ax.text(proto["B_NLL"], ax.get_ylim()[1] * 0.97, " fluency budget", color=INK2, fontsize=8, va="top")
     ax.set_xlabel("fluency cost  ΔNLL (nats/token, Qwen2.5-0.5B judge)")
@@ -88,27 +99,34 @@ def internal_vs_behavior(run, setting, fname):
 
 
 def realizability_costs(fname):
-    fig, ax = plt.subplots(figsize=(7.6, 3.8))
-    labels, data = [], []
-    for setting, short in [("gpt2_relu_jb_L6", "GPT-2 ReLU"), ("gpt2_topk_oai_L6", "GPT-2 TopK+LN"), ("gemma3_270m_jumprelu_L12", "Gemma-3 JumpReLU")]:
+    fig, ax = plt.subplots(figsize=(9.6, 4.2))
+    labels, data, groups = [], [], []
+    for setting, short in [("gpt2_relu_jb_L6", "GPT-2 · ReLU (jb)"), ("gpt2_topk_oai_L6", "GPT-2 · TopK+LN (OAI)"),
+                           ("gemma3_270m_jumprelu_L12", "Gemma-3-270m · JumpReLU")]:
         p = ROOT / "results" / "realizability" / f"{setting}.jsonl"
         if not p.exists():
             continue
         d = pd.DataFrame([json.loads(l) for l in open(p)])
         d = d[d.K == proto["K_by_method"][prim]]
-        for col, nm in [("c_free", "free"), ("c_lin", "lin (P=)"), ("c_qp", "QP (P=, P0)"), ("gn_c", "GN (P=)"), ("c_dec", "decoder")]:
+        start = len(data)
+        for col, nm in [("c_free", "free"), ("c_lin", "lin\nP="), ("c_qp", "exact QP\nP=, P0"), ("gn_c", "GN\nP="), ("c_dec", "decoder")]:
             if col in d:
                 v = (d[col] / d["resid_norm"]).replace([np.inf, -np.inf], np.nan).dropna()
                 if len(v):
-                    labels.append(f"{short}\n{nm}")
+                    labels.append(nm)
                     data.append(v.values)
-    ax.boxplot(data, vert=True, showfliers=False, medianprops=dict(color=S2, lw=2), boxprops=dict(color=INK2),
+        groups.append((short, start + 1, len(data)))
+    ax.boxplot(data, showfliers=False, medianprops=dict(color=S2, lw=2), boxprops=dict(color=INK2),
                whiskerprops=dict(color=INK2), capprops=dict(color=INK2))
     ax.set_xticks(range(1, len(labels) + 1))
-    ax.set_xticklabels(labels, fontsize=7)
-    ax.set_ylabel("edit norm / ‖h‖ to reach the target")
+    ax.set_xticklabels(labels, fontsize=8)
+    for short, a, b in groups:
+        ax.text((a + b) / 2, 1.02, short, transform=ax.get_xaxis_transform(), ha="center", va="bottom", fontsize=9, color=INK)
+        if b < len(data):
+            ax.axvline(b + 0.5, color=GRID, lw=1)
+    ax.set_ylabel("edit norm / ‖h‖ to reach the target (K=3)")
     ax.set_yscale("log")
-    ax.set_title("Minimum edit norm to realize a typical target change (neutral positions)", loc="left", fontsize=11)
+    ax.set_title("Minimum edit norm to realize a typical target change, 48 neutral positions × 30 concepts", loc="left", fontsize=11, pad=22)
     fig.tight_layout()
     fig.savefig(FIG / fname, dpi=160)
     plt.close(fig)
@@ -128,7 +146,8 @@ def h2_scatter(setting, fname):
     ax.set_xlabel(f"{d} (realizability diagnostic, neutral positions)")
     ax.set_ylabel(f"held-out ΔC of {proto['h2']['outcome_method']}")
     ax.legend(frameon=False, fontsize=8)
-    ax.set_title("H2: does the diagnostic predict behavioral steerability?", loc="left", fontsize=11)
+    h2 = load_json(ROOT / "results" / "analysis" / f"h2_{setting}.json")["predictors"][d]
+    ax.set_title(f"H2: Spearman ρ = {h2['rho']:+.2f}  [95% CI {h2['lo']:+.2f}, {h2['hi']:+.2f}], n = {h2['n']}", loc="left", fontsize=11)
     fig.tight_layout()
     fig.savefig(FIG / fname, dpi=160)
     plt.close(fig)

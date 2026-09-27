@@ -1,0 +1,39 @@
+Loading weights:   0%|          | 0/148 [00:00<?, ?it/s]Loading weights: 100%|██████████| 148/148 [00:00<00:00, 9769.70it/s]
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+/home/user/Geometry-Interference-and-Constrained-Steering/.venv/lib/python3.11/site-packages/sae_lens/saes/sae.py:254: UserWarning: 
+This SAE has non-empty model_from_pretrained_kwargs. 
+For optimal performance, load the model like so:
+model = HookedSAETransformer.from_pretrained_no_processing(..., **cfg.model_from_pretrained_kwargs)
+  warnings.warn(
+accepting rows from behavior-neutral code versions: ('3cf4a48c31c6',)
+dev2 gpt2_relu_jb_L6 dev: 361 conditions, 283 to run
+  1/283 topic:3 ridge a=0.65 K=1 gen=16.0s elapsed=0.4m eta=117.2m
+  11/283 topic:3 pinv_fs a=0.65 K=3 gen=32.6s elapsed=7.2m eta=178.9m
+  21/283 topic:6 pinv_fs a=0.1 K=1 gen=25.4s elapsed=13.0m eta=162.4m
+  31/283 topic:6 opt a=0.1 K=3 gen=62.8s elapsed=20.0m eta=163.0m
+  41/283 topic:6 opt a=0.2 K=1 gen=57.6s elapsed=25.7m eta=151.5m
+  51/283 topic:6 random a=0.3 K=1 gen=13.8s elapsed=31.4m eta=143.0m
+  61/283 topic:6 enc a=0.3 K=3 gen=14.4s elapsed=37.4m eta=136.0m
+  71/283 topic:6 enc a=0.45 K=1 gen=13.8s elapsed=43.3m eta=129.2m
+  81/283 topic:6 ridge a=0.45 K=3 gen=16.5s elapsed=49.5m eta=123.3m
+  91/283 topic:6 ridge a=0.65 K=1 gen=14.6s elapsed=55.0m eta=116.0m
+  101/283 topic:6 pinv_fs a=0.65 K=3 gen=31.2s elapsed=61.8m eta=111.4m
+  111/283 emotion:1 pinv_fs a=0.1 K=1 gen=23.9s elapsed=67.7m eta=105.0m
+  121/283 emotion:1 opt a=0.1 K=3 gen=59.9s elapsed=74.7m eta=100.1m
+  131/283 emotion:1 opt a=0.2 K=1 gen=61.0s elapsed=80.2m eta=93.1m
+  141/283 emotion:1 random a=0.3 K=1 gen=14.2s elapsed=85.8m eta=86.5m
+  151/283 emotion:1 enc a=0.3 K=3 gen=14.0s elapsed=91.4m eta=79.9m
+  161/283 emotion:1 enc a=0.45 K=1 gen=13.8s elapsed=97.2m eta=73.7m
+  171/283 emotion:1 ridge a=0.45 K=3 gen=17.1s elapsed=103.3m eta=67.6m
+  181/283 emotion:1 ridge a=0.65 K=1 gen=17.1s elapsed=109.1m eta=61.5m
+  191/283 emotion:1 pinv_fs a=0.65 K=3 gen=31.8s elapsed=115.5m eta=55.6m
+  201/283 emotion:5 pinv_fs a=0.1 K=1 gen=22.6s elapsed=121.1m eta=49.4m
+  211/283 emotion:5 opt a=0.1 K=3 gen=51.3s elapsed=128.0m eta=43.7m
+  221/283 emotion:5 opt a=0.2 K=1 gen=56.2s elapsed=133.5m eta=37.5m
+  231/283 emotion:5 random a=0.3 K=1 gen=15.1s elapsed=139.1m eta=31.3m
+  241/283 emotion:5 enc a=0.3 K=3 gen=14.6s elapsed=144.7m eta=25.2m
+  251/283 emotion:5 enc a=0.45 K=1 gen=14.8s elapsed=150.4m eta=19.2m
+  261/283 emotion:5 ridge a=0.45 K=3 gen=17.2s elapsed=156.2m eta=13.2m
+  271/283 emotion:5 ridge a=0.65 K=1 gen=16.4s elapsed=162.0m eta=7.2m
+  281/283 emotion:5 pinv_fs a=0.65 K=3 gen=19.0s elapsed=166.9m eta=1.2m
+done

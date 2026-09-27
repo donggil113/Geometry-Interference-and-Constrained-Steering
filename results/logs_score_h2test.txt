@@ -1,0 +1,9 @@
+Loading weights:   0%|          | 0/201 [00:00<?, ?it/s]Loading weights: 100%|██████████| 201/201 [00:00<00:00, 28160.97it/s]
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/104 [00:00<?, ?it/s]Loading weights: 100%|██████████| 104/104 [00:00<00:00, 7208.73it/s]
+Loading weights:   0%|          | 0/201 [00:00<?, ?it/s]Loading weights: 100%|██████████| 201/201 [00:00<00:00, 20067.01it/s]
+Loading weights:   0%|          | 0/290 [00:00<?, ?it/s]Loading weights:   0%|          | 1/290 [00:00<02:12,  2.18it/s]Loading weights:  84%|████████▍ | 244/290 [00:00<00:00, 573.11it/s]Loading weights: 100%|██████████| 290/290 [00:00<00:00, 468.61it/s]
+Loading weights:   0%|          | 0/103 [00:00<?, ?it/s]Loading weights: 100%|██████████| 103/103 [00:00<00:00, 24239.09it/s]
+priority 0: gpt2_relu_jb_L6__test__a.jsonl 13 rows, 13 scored in file
+priority 0: gpt2_relu_jb_L6__test__b.jsonl 13 rows, 13 scored in file
+ALL_DONE

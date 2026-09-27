@@ -1,0 +1,8 @@
+Loading weights:   0%|          | 0/201 [00:00<?, ?it/s]Loading weights: 100%|██████████| 201/201 [00:00<00:00, 27120.09it/s]
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/104 [00:00<?, ?it/s]Loading weights: 100%|██████████| 104/104 [00:00<00:00, 2838.21it/s]
+Loading weights:   0%|          | 0/201 [00:00<?, ?it/s]Loading weights: 100%|██████████| 201/201 [00:00<00:00, 14212.95it/s]
+Loading weights:   0%|          | 0/290 [00:00<?, ?it/s]Loading weights:   0%|          | 1/290 [00:01<04:49,  1.00s/it]Loading weights:  55%|█████▌    | 160/290 [00:01<00:00, 188.73it/s]Loading weights:  78%|███████▊  | 225/290 [00:01<00:00, 158.46it/s]Loading weights: 100%|██████████| 290/290 [00:01<00:00, 163.98it/s]
+Loading weights:   0%|          | 0/103 [00:00<?, ?it/s]Loading weights: 100%|██████████| 103/103 [00:00<00:00, 3691.25it/s]
+gpt2_relu_jb_L6__dev__a.jsonl 142 rows, 142 scored
+gpt2_relu_jb_L6__dev__b.jsonl 236 rows, 236 scored

@@ -1,0 +1,1 @@
+RUN OMP_NUM_THREADS=3 MKL_NUM_THREADS=3 .venv/bin/python -u scripts/06_score.py test1 --nli > results/logs_score_test1.txt 2>&1 22:28:38

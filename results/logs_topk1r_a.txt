@@ -1,0 +1,8 @@
+Loading weights:   0%|          | 0/148 [00:00<?, ?it/s]Loading weights: 100%|██████████| 148/148 [00:00<00:00, 31019.24it/s]
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+topk1 gpt2_topk_oai_L6 test: 57 conditions, 40 to run
+  1/40 topic:0 dec_proj a=0.3 K=3 gen=29.1s elapsed=1.1m eta=44.8m
+  11/40 topic:9 diffmean a=0.2 K=1 gen=26.8s elapsed=7.3m eta=19.4m
+  21/40 entity:0 random a=0.1 K=1 gen=28.8s elapsed=13.3m eta=12.1m
+  31/40 entity:2 dec_rand_feat a=0.3 K=1 gen=28.6s elapsed=19.4m eta=5.6m
+done

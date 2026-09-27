@@ -1,0 +1,4 @@
+cfg,method,K,alpha,dC,dNLL,selected_zero,C,dRel,protJS,dDist2,dce,kl,int_tgt_gain,int_p_rel_change,int_new_active_per_pos,int_err_delta_frac,int_err_norm_ratio,int_n_constraints,int_ms_per_pos,n_concepts
+diffmean|K1|PNone|r1.0|fs3|mp1.0|mn1.0|d0.05,diffmean,1,0.2,0.2858863719563942,0.4176983277623852,False,0.4224622123606044,-0.0866495873221235,0.2581113860857429,-0.0024038461538461488,0.1733645796775818,0.1906519616022706,0.34152495440969155,0.1786864398936041,25.212009803921568,1.0899207091409397,1.316967915475758,0.0,0.11961127114211516,8.0
+dec_proj|K3|PNone|r1.0|fs3|mp1.0|mn1.0|d0.05,dec_proj,3,0.0,0.0,0.0,True,,,,,,,,,,,,,,
+dec|K3|PNone|r1.0|fs3|mp1.0|mn1.0|d0.05,dec,3,0.0,0.0,0.0,True,,,,,,,,,,,,,,

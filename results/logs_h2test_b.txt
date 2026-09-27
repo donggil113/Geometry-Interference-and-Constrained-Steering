@@ -1,0 +1,10 @@
+Loading weights:   0%|          | 0/148 [00:00<?, ?it/s]Loading weights: 100%|██████████| 148/148 [00:00<00:00, 5640.68it/s]
+/home/user/Geometry-Interference-and-Constrained-Steering/.venv/lib/python3.11/site-packages/sae_lens/saes/sae.py:254: UserWarning: 
+This SAE has non-empty model_from_pretrained_kwargs. 
+For optimal performance, load the model like so:
+model = HookedSAETransformer.from_pretrained_no_processing(..., **cfg.model_from_pretrained_kwargs)
+  warnings.warn(
+h2test gpt2_relu_jb_L6 test: 13 conditions, 13 to run
+  1/13 topic:3 none a=0.0 K=1 gen=31.6s elapsed=0.7m eta=8.5m
+  11/13 topic:6 diffmean a=0.2 K=1 gen=42.1s elapsed=10.2m eta=1.9m
+done

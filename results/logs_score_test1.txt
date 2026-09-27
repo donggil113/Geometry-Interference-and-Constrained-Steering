@@ -1,0 +1,12 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/201 [00:00<?, ?it/s]Loading weights: 100%|██████████| 201/201 [00:00<00:00, 18838.80it/s]
+Loading weights:   0%|          | 0/104 [00:00<?, ?it/s]Loading weights: 100%|██████████| 104/104 [00:00<00:00, 3188.86it/s]
+Loading weights:   0%|          | 0/201 [00:00<?, ?it/s]Loading weights: 100%|██████████| 201/201 [00:00<00:00, 29766.79it/s]
+Loading weights:   0%|          | 0/290 [00:00<?, ?it/s]Loading weights:   0%|          | 1/290 [00:00<00:58,  4.94it/s]Loading weights:  27%|██▋       | 77/290 [00:00<00:00, 284.95it/s]Loading weights:  39%|███▉      | 113/290 [00:00<00:00, 256.03it/s]Loading weights:  49%|████▉     | 143/290 [00:00<00:00, 246.77it/s]Loading weights:  59%|█████▊    | 170/290 [00:00<00:00, 217.45it/s]Loading weights:  67%|██████▋   | 194/290 [00:00<00:00, 208.56it/s]Loading weights:  74%|███████▍  | 216/290 [00:01<00:00, 185.03it/s]Loading weights:  81%|████████▏ | 236/290 [00:01<00:00, 183.11it/s]Loading weights:  92%|█████████▏| 267/290 [00:01<00:00, 184.12it/s]Loading weights: 100%|██████████| 290/290 [00:01<00:00, 213.14it/s]
+Loading weights:   0%|          | 0/103 [00:00<?, ?it/s]Loading weights: 100%|██████████| 103/103 [00:00<00:00, 3888.82it/s]
+/home/user/Geometry-Interference-and-Constrained-Steering/.venv/lib/python3.11/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+Loading weights:   0%|          | 0/202 [00:00<?, ?it/s]Loading weights: 100%|██████████| 202/202 [00:00<00:00, 3566.28it/s]
+decision arms scored: gpt2_relu_jb_L6__test__a.jsonl 41
+decision arms scored: gpt2_relu_jb_L6__test__b.jsonl 41
+DECISION_ARMS_DONE

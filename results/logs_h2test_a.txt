@@ -1,0 +1,11 @@
+Loading weights:   0%|          | 0/148 [00:00<?, ?it/s]Loading weights: 100%|██████████| 148/148 [00:00<00:00, 4160.18it/s]
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+/home/user/Geometry-Interference-and-Constrained-Steering/.venv/lib/python3.11/site-packages/sae_lens/saes/sae.py:254: UserWarning: 
+This SAE has non-empty model_from_pretrained_kwargs. 
+For optimal performance, load the model like so:
+model = HookedSAETransformer.from_pretrained_no_processing(..., **cfg.model_from_pretrained_kwargs)
+  warnings.warn(
+h2test gpt2_relu_jb_L6 test: 13 conditions, 13 to run
+  1/13 topic:2 none a=0.0 K=1 gen=30.8s elapsed=0.7m eta=8.5m
+  11/13 topic:5 diffmean a=0.2 K=1 gen=44.4s elapsed=10.5m eta=1.9m
+done

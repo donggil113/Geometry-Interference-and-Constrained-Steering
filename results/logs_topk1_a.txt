@@ -1,0 +1,6 @@
+Loading weights:   0%|          | 0/148 [00:00<?, ?it/s]Loading weights: 100%|██████████| 148/148 [00:00<00:00, 11734.76it/s]
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+topk1 gpt2_topk_oai_L6 test: 161 conditions, 161 to run
+  1/161 topic:0 none a=0.0 K=1 gen=34.9s elapsed=0.7m eta=119.4m
+  11/161 topic:4 enc a=0.3 K=3 gen=75.0s elapsed=11.3m eta=154.0m
+  21/161 emotion:2 pinv a=0.3 K=3 gen=93.3s elapsed=26.3m eta=175.4m

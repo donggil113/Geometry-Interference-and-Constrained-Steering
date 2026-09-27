@@ -1,0 +1,24 @@
+Loading weights:   0%|          | 0/148 [00:00<?, ?it/s]Loading weights: 100%|██████████| 148/148 [00:00<00:00, 31825.53it/s]
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+/home/user/Geometry-Interference-and-Constrained-Steering/.venv/lib/python3.11/site-packages/sae_lens/saes/sae.py:254: UserWarning: 
+This SAE has non-empty model_from_pretrained_kwargs. 
+For optimal performance, load the model like so:
+model = HookedSAETransformer.from_pretrained_no_processing(..., **cfg.model_from_pretrained_kwargs)
+  warnings.warn(
+stats (added) gpt2_relu_jb_L6 entity:0
+stats (added) gpt2_relu_jb_L6 entity:1
+stats (added) gpt2_relu_jb_L6 entity:2
+stats (added) gpt2_relu_jb_L6 entity:3
+stats (added) gpt2_relu_jb_L6 entity:4
+stats (added) gpt2_relu_jb_L6 entity:5
+stats (added) gpt2_relu_jb_L6 entity:6
+stats (added) gpt2_relu_jb_L6 entity:7
+stats (added) gpt2_relu_jb_L6 entity:8
+stats (added) gpt2_relu_jb_L6 entity:9
+stats (added) gpt2_relu_jb_L6 entity:10
+stats (added) gpt2_relu_jb_L6 entity:11
+stats (added) gpt2_relu_jb_L6 entity:12
+stats (added) gpt2_relu_jb_L6 entity:13
+dev2 gpt2_relu_jb_L6 dev: 433 conditions, 395 to run
+  1/395 topic:3 random a=0.3 K=1 gen=15.3s elapsed=0.4m eta=153.0m
+  11/395 topic:3 enc a=0.3 K=3 gen=14.5s elapsed=7.2m eta=252.4m

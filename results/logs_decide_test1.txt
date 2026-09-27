@@ -39,10 +39,28 @@
   }
  },
  "collateral_ok": true,
- "matched_fluency_dC": {}
+ "matched_fluency_dC": {
+  "dec_proj": {
+   "0.5": 0.21644315419130772,
+   "1.0": 0.36129796617086496,
+   "1.5": 0.4419358845329773
+  },
+  "dec": {
+   "0.5": 0.24013685651240924,
+   "1.0": 0.35467460051654826,
+   "1.5": 0.44457142918605325
+  },
+  "diffmean": {
+   "0.5": 0.3113985327291276,
+   "1.0": 0.4727911816982941,
+   "1.5": 0.5627904693967213
+  }
+ }
 }
 [norm-matched alpha=0.3] dec_proj - dec: dC +0.013 [-0.033, +0.058] signflip p=0.3701; dNLL +0.024; dce -0.013
 [norm-matched alpha=0.3] dec_proj - enc: dC +0.182 [+0.102, +0.269] signflip p=0.0001; dNLL -0.105; dce -0.034
+[norm-matched alpha=0.3] dec_proj - diffmean: dC -0.115 [-0.223, -0.013] signflip p=0.0322; dNLL -0.031; dce -0.111
+[norm-matched alpha=0.3] dec_proj - random: dC +0.339 [+0.226, +0.457] signflip p=0.0000; dNLL +0.525; dce +0.159
 dec_proj - dec: dC +0.013 boot95 [-0.033, +0.058] signflip p=0.3701 (11/16 concepts > 0)
 dec_proj - enc: dC +0.182 boot95 [+0.102, +0.269] signflip p=0.0001 (15/16 concepts > 0)
 dec_proj - diffmean: dC +0.052 boot95 [-0.056, +0.159] signflip p=0.3203 (10/16 concepts > 0)

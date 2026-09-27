@@ -1,0 +1,279 @@
++ export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1
++ OMP_NUM_THREADS=1
++ MKL_NUM_THREADS=1
++ OPENBLAS_NUM_THREADS=1
+++ dirname scripts/run_offpath_chain.sh
++ cd scripts/..
++ . .venv/bin/activate
+++ deactivate nondestructive
+++ '[' -n '' ']'
+++ '[' -n '' ']'
+++ hash -r
+++ '[' -n '' ']'
+++ unset VIRTUAL_ENV
+++ unset VIRTUAL_ENV_PROMPT
+++ '[' '!' nondestructive = nondestructive ']'
+++ VIRTUAL_ENV=/home/user/Geometry-Interference-and-Constrained-Steering/.venv
+++ export VIRTUAL_ENV
+++ _OLD_VIRTUAL_PATH=/root/.local/bin:/root/.cargo/bin:/usr/local/go/bin:/opt/node22/bin:/opt/maven/bin:/opt/gradle/bin:/opt/rbenv/bin:/root/.bun/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+++ PATH=/home/user/Geometry-Interference-and-Constrained-Steering/.venv/bin:/root/.local/bin:/root/.cargo/bin:/usr/local/go/bin:/opt/node22/bin:/opt/maven/bin:/opt/gradle/bin:/opt/rbenv/bin:/root/.bun/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+++ export PATH
+++ '[' -n '' ']'
+++ '[' -z '' ']'
+++ _OLD_VIRTUAL_PS1=
+++ PS1='(.venv) '
+++ export PS1
+++ VIRTUAL_ENV_PROMPT='(.venv) '
+++ export VIRTUAL_ENV_PROMPT
+++ hash -r
++ python -u scripts/05_realizability.py gpt2_relu_jb_L6 48
+Loading weights:   0%|          | 0/148 [00:00<?, ?it/s]Loading weights: 100%|██████████| 148/148 [00:00<00:00, 30822.09it/s]
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+/home/user/Geometry-Interference-and-Constrained-Steering/.venv/lib/python3.11/site-packages/sae_lens/saes/sae.py:254: UserWarning: 
+This SAE has non-empty model_from_pretrained_kwargs. 
+For optimal performance, load the model like so:
+model = HookedSAETransformer.from_pretrained_no_processing(..., **cfg.model_from_pretrained_kwargs)
+  warnings.warn(
+gpt2_relu_jb_L6 positions torch.Size([48, 768]) budget 78.93502807617188
+topic:0 1 1s
+topic:0 3 2s
+topic:1 1 3s
+topic:1 3 4s
+topic:2 1 4s
+topic:2 3 5s
+topic:3 1 6s
+topic:3 3 7s
+topic:4 1 8s
+topic:4 3 9s
+topic:5 1 10s
+topic:5 3 11s
+topic:6 1 12s
+topic:6 3 13s
+topic:7 1 14s
+topic:7 3 15s
+topic:8 1 15s
+topic:8 3 16s
+topic:9 1 17s
+topic:9 3 18s
+emotion:0 1 19s
+emotion:0 3 19s
+emotion:1 1 19s
+emotion:1 3 20s
+emotion:2 1 20s
+emotion:2 3 21s
+emotion:3 1 21s
+emotion:3 3 22s
+emotion:4 1 22s
+emotion:4 3 23s
+emotion:5 1 23s
+emotion:5 3 24s
+entity:0 1 40s
+entity:0 3 64s
+entity:1 1 83s
+entity:1 3 108s
+entity:2 1 124s
+entity:2 3 150s
+entity:3 1 165s
+entity:3 3 187s
+entity:4 1 202s
+entity:4 3 225s
+entity:5 1 244s
+entity:5 3 264s
+entity:6 1 282s
+entity:6 3 302s
+entity:7 1 319s
+entity:7 3 343s
+entity:8 1 367s
+entity:8 3 403s
+entity:9 1 420s
+entity:9 3 443s
+entity:10 1 461s
+entity:10 3 483s
+entity:11 1 498s
+entity:11 3 535s
+entity:12 1 567s
+entity:12 3 609s
+entity:13 1 625s
+entity:13 3 658s
++ python -u scripts/02_feature_stats.py gpt2_topk_oai_L6
+Loading weights:   0%|          | 0/148 [00:00<?, ?it/s]Loading weights: 100%|██████████| 148/148 [00:00<00:00, 2945.21it/s]
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+stats (added) gpt2_topk_oai_L6 entity:0
+stats (added) gpt2_topk_oai_L6 entity:1
+stats (added) gpt2_topk_oai_L6 entity:2
+stats (added) gpt2_topk_oai_L6 entity:3
+stats (added) gpt2_topk_oai_L6 entity:4
+stats (added) gpt2_topk_oai_L6 entity:5
+stats (added) gpt2_topk_oai_L6 entity:6
+stats (added) gpt2_topk_oai_L6 entity:7
+stats (added) gpt2_topk_oai_L6 entity:8
+stats (added) gpt2_topk_oai_L6 entity:9
+stats (added) gpt2_topk_oai_L6 entity:10
+stats (added) gpt2_topk_oai_L6 entity:11
+stats (added) gpt2_topk_oai_L6 entity:12
+stats (added) gpt2_topk_oai_L6 entity:13
+gpt2_topk_oai_L6 done 422s median norm 78.93502807617188
++ python -u scripts/05_realizability.py gpt2_topk_oai_L6 48
+Loading weights:   0%|          | 0/148 [00:00<?, ?it/s]Loading weights: 100%|██████████| 148/148 [00:00<00:00, 5607.97it/s]
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+gpt2_topk_oai_L6 positions torch.Size([48, 768]) budget 78.93502807617188
+topic:0 1 25s
+topic:0 3 52s
+topic:1 1 78s
+topic:1 3 105s
+topic:2 1 131s
+topic:2 3 156s
+topic:3 1 181s
+topic:3 3 208s
+topic:4 1 234s
+topic:4 3 256s
+topic:5 1 281s
+topic:5 3 309s
+topic:6 1 335s
+topic:6 3 362s
+topic:7 1 388s
+topic:7 3 413s
+topic:8 1 438s
+topic:8 3 466s
+topic:9 1 492s
+topic:9 3 520s
+emotion:0 1 546s
+emotion:0 3 573s
+emotion:1 1 598s
+emotion:1 3 624s
+emotion:2 1 650s
+emotion:2 3 677s
+emotion:3 1 703s
+emotion:3 3 730s
+emotion:4 1 757s
+emotion:4 3 786s
+emotion:5 1 814s
+emotion:5 3 842s
+entity:0 1 870s
+entity:0 3 899s
+entity:1 1 928s
+entity:1 3 958s
+entity:2 1 987s
+entity:2 3 1016s
+entity:3 1 1044s
+entity:3 3 1074s
+entity:4 1 1103s
+entity:4 3 1130s
+entity:5 1 1158s
+entity:5 3 1187s
+entity:6 1 1213s
+entity:6 3 1239s
+entity:7 1 1265s
+entity:7 3 1291s
+entity:8 1 1316s
+entity:8 3 1343s
+entity:9 1 1368s
+entity:9 3 1394s
+entity:10 1 1420s
+entity:10 3 1447s
+entity:11 1 1473s
+entity:11 3 1500s
+entity:12 1 1527s
+entity:12 3 1555s
+entity:13 1 1581s
+entity:13 3 1608s
++ python -u scripts/02_feature_stats.py gemma3_270m_jumprelu_L12
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/236 [00:00<?, ?it/s]Loading weights:   0%|          | 1/236 [00:00<01:38,  2.38it/s]Loading weights: 100%|██████████| 236/236 [00:00<00:00, 548.85it/s]
+stats gemma3_270m_jumprelu_L12 topic:0 torch.Size([300, 16384])
+stats gemma3_270m_jumprelu_L12 topic:1 torch.Size([300, 16384])
+stats gemma3_270m_jumprelu_L12 topic:2 torch.Size([300, 16384])
+stats gemma3_270m_jumprelu_L12 topic:3 torch.Size([300, 16384])
+stats gemma3_270m_jumprelu_L12 topic:4 torch.Size([300, 16384])
+stats gemma3_270m_jumprelu_L12 topic:5 torch.Size([300, 16384])
+stats gemma3_270m_jumprelu_L12 topic:6 torch.Size([300, 16384])
+stats gemma3_270m_jumprelu_L12 topic:7 torch.Size([300, 16384])
+stats gemma3_270m_jumprelu_L12 topic:8 torch.Size([300, 16384])
+stats gemma3_270m_jumprelu_L12 topic:9 torch.Size([300, 16384])
+stats gemma3_270m_jumprelu_L12 emotion:0 torch.Size([300, 16384])
+stats gemma3_270m_jumprelu_L12 emotion:1 torch.Size([300, 16384])
+stats gemma3_270m_jumprelu_L12 emotion:2 torch.Size([300, 16384])
+stats gemma3_270m_jumprelu_L12 emotion:3 torch.Size([300, 16384])
+stats gemma3_270m_jumprelu_L12 emotion:4 torch.Size([300, 16384])
+stats gemma3_270m_jumprelu_L12 emotion:5 torch.Size([300, 16384])
+stats gemma3_270m_jumprelu_L12 entity:0 torch.Size([300, 16384])
+stats gemma3_270m_jumprelu_L12 entity:1 torch.Size([300, 16384])
+stats gemma3_270m_jumprelu_L12 entity:2 torch.Size([300, 16384])
+stats gemma3_270m_jumprelu_L12 entity:3 torch.Size([300, 16384])
+stats gemma3_270m_jumprelu_L12 entity:4 torch.Size([300, 16384])
+stats gemma3_270m_jumprelu_L12 entity:5 torch.Size([300, 16384])
+stats gemma3_270m_jumprelu_L12 entity:6 torch.Size([300, 16384])
+stats gemma3_270m_jumprelu_L12 entity:7 torch.Size([300, 16384])
+stats gemma3_270m_jumprelu_L12 entity:8 torch.Size([300, 16384])
+stats gemma3_270m_jumprelu_L12 entity:9 torch.Size([300, 16384])
+stats gemma3_270m_jumprelu_L12 entity:10 torch.Size([300, 16384])
+stats gemma3_270m_jumprelu_L12 entity:11 torch.Size([300, 16384])
+stats gemma3_270m_jumprelu_L12 entity:12 torch.Size([300, 16384])
+stats gemma3_270m_jumprelu_L12 entity:13 torch.Size([300, 16384])
+gemma3_270m_jumprelu_L12 done 932s median norm 14143.5078125
++ python -u scripts/05_realizability.py gemma3_270m_jumprelu_L12 48
+Loading weights:   0%|          | 0/236 [00:00<?, ?it/s]Loading weights:   0%|          | 1/236 [00:00<01:53,  2.07it/s]Loading weights: 100%|██████████| 236/236 [00:00<00:00, 480.94it/s]
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+gemma3_270m_jumprelu_L12 positions torch.Size([48, 640]) budget 14143.5078125
+topic:0 1 15s
+topic:0 3 54s
+topic:1 1 66s
+topic:1 3 97s
+topic:2 1 108s
+topic:2 3 134s
+topic:3 1 145s
+topic:3 3 166s
+topic:4 1 177s
+topic:4 3 203s
+topic:5 1 217s
+topic:5 3 246s
+topic:6 1 257s
+topic:6 3 283s
+topic:7 1 293s
+topic:7 3 314s
+topic:8 1 330s
+topic:8 3 351s
+topic:9 1 369s
+topic:9 3 404s
+emotion:0 1 418s
+emotion:0 3 448s
+emotion:1 1 469s
+emotion:1 3 500s
+emotion:2 1 516s
+emotion:2 3 545s
+emotion:3 1 558s
+emotion:3 3 588s
+emotion:4 1 611s
+emotion:4 3 641s
+emotion:5 1 657s
+emotion:5 3 685s
+entity:0 1 696s
+entity:0 3 721s
+entity:1 1 732s
+entity:1 3 758s
+entity:2 1 770s
+entity:2 3 803s
+entity:3 1 818s
+entity:3 3 859s
+entity:4 1 874s
+entity:4 3 900s
+entity:5 1 911s
+entity:5 3 933s
+entity:6 1 942s
+entity:6 3 963s
+entity:7 1 985s
+entity:7 3 1016s
+entity:8 1 1030s
+entity:8 3 1055s
+entity:9 1 1071s
+entity:9 3 1096s
+entity:10 1 1107s
+entity:10 3 1135s
+entity:11 1 1146s
+entity:11 3 1169s
+entity:12 1 1184s
+entity:12 3 1218s
+entity:13 1 1233s
+entity:13 3 1267s
++ echo CHAIN_DONE
+CHAIN_DONE

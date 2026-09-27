@@ -1,10 +1,46 @@
 # N3 report: Which SAE feature edits are realizable? Geometry, interference, and constrained steering
 
-*Status: <!--VERDICT-->*
+*Status: **NO_GO**. H1 was decided on held-out data under the pre-registered rule (freeze commit `4282fb5`); H2 is not supported. Both results were independently re-verified.*
 
 ## 0. Verdict (pre-registered decision)
 
-<!--VERDICT_BLOCK-->
+**NO_GO.** Realizability-aware (constrained) SAE edits do not improve independent behavior over plain
+decoder steering, and they do not beat the generic DiffMean baseline. The pattern is exactly the one the
+brief defines as NO_GO: "같은 encoder 점수만 좋아지거나 generic baseline과 같으면 NO_GO".
+
+1. **Q1: can T be changed while P is preserved? At the SAE's own readout, yes, cheaply, with one
+   structural exception.** (`docs/03_realizability.md`)
+   - For ReLU and JumpReLU SAEs, the exact finite-step QP realizes a typical target change with *every*
+     active feature preserved and *every* inactive feature kept off. It needs 4–15% of ‖h‖, and 100% of
+     requests are feasible.
+   - Interference inflates the cost by only 7–29%.
+   - Local Jacobian/pseudoinverse solutions are not finite-step valid: they flip 9–74 gates, and the
+     first flip occurs 3–11% of the way along the step. The exact correction adds only 1–8% norm.
+   - Under TopK+LN, full P preservation is structurally impossible in >99% of requests, because of
+     slot eviction.
+2. **Q2: does diagnosing or correcting realizability help downstream behavior? No.** This is the
+   minimal decisive experiment: GPT-2 small, jb ReLU SAE, 16 held-out concepts × 48 held-out prompts.
+   - The pre-registered primary corrected edit (`dec_proj`) removes all protected-feature change and
+     45% of spurious activations *inside the SAE*. Behaviorally it is not distinguishable from plain
+     decoder steering: ΔC +0.013, CI [−0.033, +0.058], p = 0.37.
+   - It is not distinguishable from DiffMean at the frozen operating points: +0.052, p = 0.32.
+   - At *matched norm*, DiffMean is significantly better: −0.115, p = 0.032.
+   - A count-matched *random* protected set gives the same behavior.
+   - Methods that maximize the encoder's own target score (enc, pinv, ridge, opt) steer behavior
+     *worse*. Within each strength, Tier-0 target gain vs Tier-2 ΔC has ρ ≈ −0.1.
+   - The same null replicates on a held-out TopK SAE at the same site: `dec_proj` − `dec` = −0.010,
+     p = 0.34.
+3. **H2: the realizability diagnostic does not predict steerability.** Exact QP cost vs held-out ΔC over
+   24 concepts: ρ = +0.05, CI [−0.32, +0.41]. The best predictor is the concept's generic DiffMean
+   steerability (ρ = +0.51).
+
+**What remains positive.**
+- The selected SAE concept features *are* causally meaningful: `dec` beats a random decoder row by
+  +0.30 to +0.39 ΔC.
+- The exact finite-step analysis cleanly separates "realizable inside the SAE" from "moves behavior".
+  The binding constraint on behavior lies outside the SAE's same-layer encoder geometry.
+- Per the brief ("거대 SAE 재학습은 핵심 가설을 확인하기 전에 시작하지 마라"), no SAE retraining is warranted.
+
 
 ## 1. What was done (mapping to the brief)
 
@@ -202,7 +238,22 @@ At their frozen points:
   family it is +0.007.
 - Penalized scores (ΔC − λ·ΔNLL) favour DiffMean for any λ ≳ 0.12 per nat. At λ = 0.46, the dev local
   slope of `dec_proj`, the difference is −0.149 (p = 0.011, uncorrected, λ chosen post hoc).
-- <!--MATCHED_FLUENCY-->
+- **Matched fluency** (held-out curves over α ∈ {0.1, 0.2, 0.3, 0.45, 0.65}; linear interpolation at a
+  fixed ΔNLL; per-concept paired sign-flip tests are post hoc; figure `docs/figures/pareto_relu_heldout.png`).
+
+  | ΔC at ΔNLL = | 0.25 | 0.5 | 1.0 |
+  |---|---|---|---|
+  | DiffMean | 0.18 | 0.31 | 0.47 |
+  | dec | 0.15 | 0.24 | 0.36 |
+  | dec_proj | 0.13 | 0.22 | 0.36 |
+
+  - Per concept, `dec_proj` − `dec` is −0.014 (p = 0.21) at 0.5 nats and −0.000 (p = 0.97) at 1.0 nats.
+  - `dec_proj` − DiffMean is −0.093 (p = 0.048) and −0.106 (p = 0.08).
+  - DiffMean lies on or above both SAE curves at every fluency cost. The correction moves the SAE curve
+    nowhere.
+
+![Held-out Pareto](figures/pareto_relu_heldout.png)
+![Tier 0 vs Tier 2](figures/internal_vs_behavior_relu.png)
 
 **5.5 Controls and references.**
 
@@ -214,7 +265,45 @@ At their frozen points:
 
 ## 6. Generalization: another SAE on the same site (TopK + LayerNorm)
 
-<!--TOPK_BLOCK-->
+- **Setup.** The held-out SAE is OpenAI v5 32k TopK (k = 32) with LayerNorm input, at the *same*
+  residual site (`blocks.5.hook_resid_post` equals `blocks.6.hook_resid_pre`).
+  - All dev-frozen hyper-parameters (K, α, methods) are transferred without re-tuning.
+  - Feature selection re-applies the frozen rule to this SAE's statistics.
+  - Same 16 held-out concepts × 48 held-out prompts.
+  - After H1 was decided, the grid was reduced to the decision arms plus controls
+    (`results/runs/topk1_NOTES.txt`).
+  - Files: `results/analysis/topk1/`.
+
+| arm (frozen point) | ΔC | ΔNLL | protJS | ΔCE | Tier 0: ‖Δf_P‖/‖f_P‖ | Tier 0: new feats/pos |
+|---|---|---|---|---|---|---|
+| dec_proj | 0.400 | 0.652 | 0.256 | 0.356 | 0.172 | 7.3 |
+| dec | 0.410 | 0.625 | 0.280 | 0.369 | 0.200 | 6.6 |
+| dec_proj_randP (control) | 0.413 | 0.630 | 0.272 | 0.362 | 0.198 | 6.7 |
+| enc | 0.330 | 0.705 | 0.276 | 0.331 | 0.250 | 10.1 |
+| diffmean (α 0.2) | 0.289 | 0.438 | 0.247 | 0.169 | 0.161 | 6.4 |
+| dec_rand_feat (control) | 0.023 | 0.530 | 0.245 | 0.213 | 0.195 | 8.4 |
+| random (α 0.1) | 0.002 | 0.007 | 0.174 | 0.013 | 0.085 | 2.7 |
+
+| dec_proj minus … | ΔC diff | 95% CI | sign-flip p | concepts > 0 |
+|---|---|---|---|---|
+| dec | **−0.010** | [−0.047, +0.028] | 0.34 | 7/16 |
+| dec_proj_randP (count-matched random P) | −0.013 | [−0.050, +0.023] | 0.051 | 4/16 |
+| enc | +0.070 | [+0.001, +0.139] | 0.031 | 11/16 |
+| diffmean | +0.111 | [+0.023, +0.198] | 0.015 | 10/16 |
+| random | +0.398 | [+0.282, +0.511] | <1e-4 | 16/16 |
+
+- **The central null replicates on a different SAE architecture.** The realizability correction does
+  not improve on plain decoder steering; the point estimate is slightly negative. It is behaviorally
+  identical to projecting out a random protected set.
+- **Even the Tier-0 benefit mostly disappears under TopK+LN.** Protected change drops only from 0.20 to
+  0.17, because LayerNorm couples all features and T entering the top-k evicts protected ones. This is
+  the structural conflict predicted in `docs/03_realizability.md`.
+- **Against DiffMean.** With this SAE, the decoder-based arms beat DiffMean at the frozen points
+  (+0.11, p = 0.015). They do so at a higher fluency and utility cost (ΔNLL 0.65 vs 0.44; ΔCE 0.36 vs
+  0.17), so the comparison is not fluency-matched. The same holds for `dec`: the gain is not from the
+  correction.
+- The pre-registered rule applied to this setting also gives NO_GO (`dec` not rejected).
+
 
 ## 7. H2: does the realizability diagnosis predict behavior?
 
@@ -248,7 +337,22 @@ At their frozen points:
 
 ## 8. Cost
 
-<!--RUNTIME_BLOCK-->
+Measured on an idle CPU (4 threads) with `scripts/14_runtime.py`, each method at its frozen point
+(`results/runtime/gpt2_relu_jb_L6.json`).
+
+| method | edit cost, ms / position (n = 24) | edit cost, ms / position (n = 1024) | 24 prompts × 40 tokens generation, s (unsteered 4.39) |
+|---|---|---|---|
+| dec / diffmean / random / enc | 0.005–0.02 | 0.001–0.006 | 4.5–4.7 (+3–7%) |
+| dec_proj / pinv / ridge | 0.53–0.57 | 0.65–0.77 | 5.43–5.48 (+24%) |
+| dec_proj_fs / pinv_fs | 3.1–3.6 | 4.3–5.8 | 8.8–10.0 (+100–128%) |
+| opt (20 projected-gradient steps, full encoder) | 14.4 | 10.8 | 20.2 (+360%) |
+
+- The corrected methods cost 65–1800× more per edit than decoder or DiffMean steering.
+- They buy only Tier-0 (SAE-internal) improvements.
+
+**Realizability figure.**
+![Realizability costs](figures/realizability_costs.png)
+![H2](figures/h2_relu.png)
 
 ## 9. Deviations, limitations, and what is *not* claimed
 

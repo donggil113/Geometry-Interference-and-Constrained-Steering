@@ -1,0 +1,21 @@
+Loading weights:   0%|          | 0/201 [00:00<?, ?it/s]Loading weights: 100%|██████████| 201/201 [00:00<00:00, 14178.29it/s]
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/104 [00:00<?, ?it/s]Loading weights: 100%|██████████| 104/104 [00:00<00:00, 16913.83it/s]
+Loading weights:   0%|          | 0/201 [00:00<?, ?it/s]Loading weights: 100%|██████████| 201/201 [00:00<00:00, 14787.85it/s]
+Loading weights:   0%|          | 0/290 [00:00<?, ?it/s]Loading weights:   0%|          | 1/290 [00:00<01:04,  4.45it/s]Loading weights:  27%|██▋       | 77/290 [00:00<00:00, 267.89it/s]Loading weights:  39%|███▊      | 112/290 [00:00<00:01, 171.65it/s]Loading weights:  51%|█████▏    | 149/290 [00:00<00:00, 209.14it/s]Loading weights:  61%|██████    | 177/290 [00:00<00:00, 188.81it/s]Loading weights:  69%|██████▉   | 201/290 [00:01<00:00, 160.87it/s]Loading weights:  84%|████████▍ | 244/290 [00:01<00:00, 189.02it/s]Loading weights:  92%|█████████▏| 267/290 [00:01<00:00, 172.31it/s]Loading weights: 100%|██████████| 290/290 [00:01<00:00, 182.82it/s]
+Loading weights:   0%|          | 0/103 [00:00<?, ?it/s]Loading weights: 100%|██████████| 103/103 [00:00<00:00, 1524.34it/s]
+/home/user/Geometry-Interference-and-Constrained-Steering/.venv/lib/python3.11/site-packages/torch/jit/_script.py:1491: FutureWarning: `torch.jit.script` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+Loading weights:   0%|          | 0/202 [00:00<?, ?it/s]Loading weights:  99%|█████████▉| 200/202 [00:00<00:00, 1999.58it/s]Loading weights: 100%|██████████| 202/202 [00:00<00:00, 2013.43it/s]
+decision arms scored: gpt2_relu_jb_L6__test__a.jsonl 41
+decision arms scored: gpt2_relu_jb_L6__test__b.jsonl 41
+DECISION_ARMS_DONE
+priority 0: gpt2_relu_jb_L6__test__a.jsonl 24 rows, 91 scored in file
+priority 0: gpt2_relu_jb_L6__test__b.jsonl 24 rows, 65 scored in file
+priority 1: gpt2_relu_jb_L6__test__a.jsonl 32 rows, 107 scored in file
+priority 1: gpt2_relu_jb_L6__test__b.jsonl 32 rows, 81 scored in file
+priority 2: gpt2_relu_jb_L6__test__a.jsonl 64 rows, 121 scored in file
+priority 2: gpt2_relu_jb_L6__test__b.jsonl 64 rows, 121 scored in file
+priority 3: gpt2_relu_jb_L6__test__a.jsonl 89 rows, 209 scored in file
+priority 3: gpt2_relu_jb_L6__test__b.jsonl 89 rows, 209 scored in file
+ALL_DONE

@@ -1,0 +1,42 @@
+Loading weights:   0%|          | 0/148 [00:00<?, ?it/s]Loading weights: 100%|██████████| 148/148 [00:00<00:00, 8757.24it/s]
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+/home/user/Geometry-Interference-and-Constrained-Steering/.venv/lib/python3.11/site-packages/sae_lens/saes/sae.py:254: UserWarning: 
+This SAE has non-empty model_from_pretrained_kwargs. 
+For optimal performance, load the model like so:
+model = HookedSAETransformer.from_pretrained_no_processing(..., **cfg.model_from_pretrained_kwargs)
+  warnings.warn(
+dev2 gpt2_relu_jb_L6 dev: 361 conditions, 325 to run
+  1/325 topic:2 opt a=0.2 K=3 gen=33.8s elapsed=1.0m eta=311.5m
+  11/325 topic:2 opt a=0.3 K=1 gen=33.5s elapsed=4.5m eta=129.2m
+  21/325 topic:2 random a=0.45 K=1 gen=16.2s elapsed=9.5m eta=137.4m
+  31/325 topic:2 enc a=0.45 K=3 gen=16.3s elapsed=15.5m eta=147.1m
+  41/325 topic:2 enc a=0.65 K=1 gen=15.0s elapsed=21.6m eta=149.5m
+  51/325 topic:2 ridge a=0.65 K=3 gen=16.1s elapsed=27.6m eta=148.5m
+  61/325 topic:5 ridge a=0.1 K=1 gen=16.0s elapsed=33.6m eta=145.6m
+  71/325 topic:5 pinv_fs a=0.1 K=3 gen=23.5s elapsed=39.5m eta=141.4m
+  81/325 topic:5 pinv_fs a=0.2 K=1 gen=25.1s elapsed=45.4m eta=136.7m
+  91/325 topic:5 opt a=0.2 K=3 gen=57.3s elapsed=52.8m eta=135.8m
+  101/325 topic:5 opt a=0.3 K=1 gen=58.3s elapsed=58.8m eta=130.5m
+  111/325 topic:5 random a=0.45 K=1 gen=15.8s elapsed=64.3m eta=124.0m
+  121/325 topic:5 enc a=0.45 K=3 gen=14.4s elapsed=70.2m eta=118.4m
+  131/325 topic:5 enc a=0.65 K=1 gen=14.3s elapsed=76.2m eta=112.9m
+  141/325 topic:5 ridge a=0.65 K=3 gen=16.4s elapsed=82.5m eta=107.7m
+  151/325 topic:7 ridge a=0.1 K=1 gen=15.3s elapsed=88.6m eta=102.0m
+  161/325 topic:7 pinv_fs a=0.1 K=3 gen=24.4s elapsed=94.6m eta=96.4m
+  171/325 topic:7 pinv_fs a=0.2 K=1 gen=25.6s elapsed=100.3m eta=90.3m
+  181/325 topic:7 opt a=0.2 K=3 gen=56.2s elapsed=107.7m eta=85.7m
+  191/325 topic:7 opt a=0.3 K=1 gen=56.8s elapsed=113.5m eta=79.6m
+  201/325 topic:7 random a=0.45 K=1 gen=15.6s elapsed=119.3m eta=73.6m
+  211/325 topic:7 enc a=0.45 K=3 gen=15.3s elapsed=125.3m eta=67.7m
+  221/325 topic:7 enc a=0.65 K=1 gen=15.2s elapsed=131.2m eta=61.7m
+  231/325 topic:7 ridge a=0.65 K=3 gen=18.0s elapsed=137.3m eta=55.9m
+  241/325 emotion:4 ridge a=0.1 K=1 gen=14.6s elapsed=143.2m eta=49.9m
+  251/325 emotion:4 pinv_fs a=0.1 K=3 gen=21.8s elapsed=149.1m eta=44.0m
+  261/325 emotion:4 pinv_fs a=0.2 K=1 gen=28.1s elapsed=154.7m eta=37.9m
+  271/325 emotion:4 opt a=0.2 K=3 gen=57.4s elapsed=161.8m eta=32.2m
+  281/325 emotion:4 opt a=0.3 K=1 gen=57.6s elapsed=167.4m eta=26.2m
+  291/325 emotion:4 random a=0.45 K=1 gen=8.6s elapsed=172.1m eta=20.1m
+  301/325 emotion:4 enc a=0.45 K=3 gen=8.8s elapsed=175.6m eta=14.0m
+  311/325 emotion:4 enc a=0.65 K=1 gen=8.7s elapsed=179.1m eta=8.1m
+  321/325 emotion:4 ridge a=0.65 K=3 gen=9.7s elapsed=182.8m eta=2.3m
+done

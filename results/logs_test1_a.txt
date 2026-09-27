@@ -1,0 +1,35 @@
+Loading weights:   0%|          | 0/148 [00:00<?, ?it/s]Loading weights:  20%|██        | 30/148 [00:00<00:00, 294.89it/s]Loading weights: 100%|██████████| 148/148 [00:00<00:00, 760.34it/s]
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+/home/user/Geometry-Interference-and-Constrained-Steering/.venv/lib/python3.11/site-packages/sae_lens/saes/sae.py:254: UserWarning: 
+This SAE has non-empty model_from_pretrained_kwargs. 
+For optimal performance, load the model like so:
+model = HookedSAETransformer.from_pretrained_no_processing(..., **cfg.model_from_pretrained_kwargs)
+  warnings.warn(
+/home/user/Geometry-Interference-and-Constrained-Steering/.venv/lib/python3.11/site-packages/sae_lens/saes/sae.py:254: UserWarning: 
+This SAE has non-empty model_from_pretrained_kwargs. 
+For optimal performance, load the model like so:
+model = HookedSAETransformer.from_pretrained_no_processing(..., **cfg.model_from_pretrained_kwargs)
+  warnings.warn(
+test1 gpt2_relu_jb_L6 test: 209 conditions, 209 to run
+  1/209 topic:0 none a=0.0 K=1 gen=13.7s elapsed=0.4m eta=82.5m
+  11/209 topic:4 enc a=0.3 K=3 gen=14.8s elapsed=3.7m eta=66.8m
+  21/209 emotion:2 pinv a=0.3 K=3 gen=16.8s elapsed=7.2m eta=64.6m
+  31/209 entity:12 ridge a=0.3 K=3 gen=16.5s elapsed=11.1m eta=63.5m
+  41/209 entity:6 dec_proj a=0.3 K=3 gen=16.5s elapsed=14.9m eta=61.0m
+  51/209 topic:4 dec_proj_fs a=0.3 K=3 gen=28.1s elapsed=22.6m eta=70.0m
+  61/209 emotion:2 opt a=0.2 K=1 gen=57.0s elapsed=32.5m eta=78.9m
+  71/209 entity:12 diffmean a=0.2 K=1 gen=14.7s elapsed=39.9m eta=77.6m
+  81/209 entity:6 random a=0.1 K=1 gen=14.2s elapsed=43.2m eta=68.2m
+  91/209 topic:4 dec_proj_randP a=0.3 K=3 gen=17.5s elapsed=46.6m eta=60.4m
+  101/209 emotion:2 prompt a=0.0 K=1 gen=12.5s elapsed=50.1m eta=53.6m
+  111/209 entity:12 diffmean a=0.3 K=1 gen=14.6s elapsed=53.2m eta=47.0m
+  121/209 entity:6 random a=0.3 K=1 gen=15.0s elapsed=56.6m eta=41.2m
+  131/209 topic:4 dec a=0.2 K=3 gen=14.8s elapsed=59.9m eta=35.7m
+  141/209 emotion:2 dec a=0.45 K=3 gen=14.7s elapsed=63.2m eta=30.5m
+  151/209 entity:12 dec a=0.65 K=3 gen=14.7s elapsed=66.6m eta=25.6m
+  161/209 entity:6 diffmean a=0.1 K=1 gen=14.6s elapsed=69.9m eta=20.8m
+  171/209 topic:4 diffmean a=0.65 K=1 gen=14.7s elapsed=73.2m eta=16.3m
+  181/209 emotion:2 dec_proj a=0.1 K=3 gen=16.2s elapsed=76.7m eta=11.9m
+  191/209 entity:12 dec_proj a=0.2 K=3 gen=16.1s elapsed=80.4m eta=7.6m
+  201/209 entity:6 dec_proj a=0.45 K=3 gen=15.8s elapsed=84.2m eta=3.4m
+done
