@@ -4,7 +4,7 @@
     "gpt2_relu_jb_L6": {
       "model": "gpt2 (HF openai-community/gpt2)",
       "model_revision": "607a30d783dfa663caf39e06633721c8d4cfcd7e",
-      "backend": "transformer_lens HookedTransformer.from_pretrained('gpt2') default processing (fold_ln, center_writing_weights, center_unembed)",
+      "backend": "hf transformers AutoModelForCausalLM (openai-community/gpt2 @ model_revision); read/edit at transformer.h[5] output (== TransformerLens blocks.6.hook_resid_pre), mean-centred (== TL center_writing_weights). SAE reads h - mean(h); every edit is projected onto 1-perp before norm matching (GPT-2 is mean-invariant). Validated against TL HookedTransformer.from_pretrained('gpt2') default processing in results/validation/hf_vs_tl_gpt2_backend.json (initial checkpoint validation used TL directly).",
       "sae_release": "gpt2-small-res-jb",
       "sae_id": "blocks.6.hook_resid_pre",
       "sae_repo": "jbloom/GPT2-Small-SAEs-Reformatted",
@@ -13,12 +13,13 @@
       "sae_kind": "relu",
       "normalization": "none",
       "prepend_bos": true,
-      "bos_position_edited": false
+      "bos_position_edited": false,
+      "center_input": true
     },
     "gpt2_topk_oai_L6": {
       "model": "gpt2 (HF openai-community/gpt2)",
       "model_revision": "607a30d783dfa663caf39e06633721c8d4cfcd7e",
-      "backend": "transformer_lens HookedTransformer.from_pretrained('gpt2') default processing (fold_ln, center_writing_weights, center_unembed)",
+      "backend": "hf transformers AutoModelForCausalLM (openai-community/gpt2 @ model_revision); read/edit at transformer.h[5] output (== TransformerLens blocks.6.hook_resid_pre), mean-centred (== TL center_writing_weights). SAE reads h - mean(h); every edit is projected onto 1-perp before norm matching (GPT-2 is mean-invariant). Validated against TL HookedTransformer.from_pretrained('gpt2') default processing in results/validation/hf_vs_tl_gpt2_backend.json (initial checkpoint validation used TL directly).",
       "sae_release": "gpt2-small-resid-post-v5-32k",
       "sae_id": "blocks.5.hook_resid_post",
       "sae_repo": "jbloom/GPT2-Small-OAI-v5-32k-resid-post-SAEs",
@@ -27,7 +28,8 @@
       "sae_kind": "topk",
       "normalization": "layer_norm",
       "prepend_bos": true,
-      "bos_position_edited": false
+      "bos_position_edited": false,
+      "center_input": true
     },
     "gemma3_270m_jumprelu_L12": {
       "model": "unsloth/gemma-3-270m (ungated mirror of google/gemma-3-270m; validated via SAE reconstruction below)",

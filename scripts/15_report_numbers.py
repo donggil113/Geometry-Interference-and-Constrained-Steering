@@ -32,6 +32,8 @@ def levels(df, methods, cols):
 
 
 def contrast(df, m1, m2, metric, a1=None, a2=None):
+    if metric not in df:
+        return None
     s1, s2 = arm_rows(df, m1, a1), arm_rows(df, m2, a2)
     if not len(s1) or not len(s2):
         return None
@@ -65,9 +67,28 @@ for run, setting in [("test1", "gpt2_relu_jb_L6"), ("topk1", "gpt2_topk_oai_L6")
         r = contrast(df, m1, m2, "dC")
         if r:
             o["contrasts"][f"{m1}-{m2}:dC"] = r
+    # other corrected arms vs dec at their frozen points (exploratory)
+    for m1 in ["pinv", "ridge", "dec_proj_fs", "pinv_fs", "opt", "enc"]:
+        for metric in ["dC", "dNLL", "dce"]:
+            r = contrast(df, m1, "dec", metric)
+            if r:
+                o["contrasts"][f"{m1}-dec:{metric}"] = r
+    # control vs primary, extra readouts
+    for metric in [m for m in ["down_new_active_per_pos", "kl", "protJS", "dce"] if m in df]:
+        r = contrast(df, prim, "dec_proj_randP", metric)
+        if r:
+            o["contrasts"][f"{prim}-dec_proj_randP:{metric}"] = r
+    # post hoc penalized score dC - lam * dNLL vs diffmean
+    s1, s2 = arm_rows(df, prim), arm_rows(df, "diffmean")
+    if len(s1) and len(s2):
+        for lam in [0.12, 0.25, 0.35, 0.46]:
+            fa = pd.concat([s1, s2]).copy()
+            fa["pen"] = fa["dC"] - lam * fa["dNLL"]
+            r = cluster_bootstrap_diff(fa, {"cfg": proto["cfg_by_method"][prim]}, {"cfg": proto["cfg_by_method"]["diffmean"]}, metric="pen")
+            o["contrasts"][f"posthoc_penalized_lambda{lam}:{prim}-diffmean"] = {k: r[k] for k in ["est", "lo", "hi", "p_signflip", "n_concepts_positive", "n_concepts"]}
     pa = proto["alpha_by_method"][prim]
     for m2 in ["dec", "diffmean", "enc", "random"]:
-        for metric in ["dC", "dNLL", "dce"]:
+        for metric in ["dC", "dNLL", "dce", "protJS"]:
             r = contrast(df, prim, m2, metric, a1=pa, a2=pa)
             if r:
                 o["contrasts"][f"normmatched:{prim}-{m2}:{metric}"] = r
@@ -95,6 +116,14 @@ for s in ["gpt2_relu_jb_L6"]:
     p = ROOT / "results" / "analysis" / f"h2_{s}.json"
     if p.exists():
         out[f"h2_{s}"] = load_json(p)
+    # sensitivity (amendment A6): the section-6 outcome `dec` instead of the frozen `dec_proj`
+    t = ROOT / "results" / "analysis" / f"h2_table_{s}.csv"
+    if t.exists():
+        from scipy.stats import spearmanr
+        tab = pd.read_csv(t, index_col=0)
+        d = proto["h2"]["primary_diagnostic"]
+        ok = tab[[d, "dC_dec"]].replace([np.inf, -np.inf], np.nan).dropna()
+        out[f"h2_{s}_dec_outcome"] = {"diagnostic": d, "rho": float(spearmanr(ok[d], ok["dC_dec"]).correlation), "n": int(len(ok))}
 p = ROOT / "results" / "runtime" / "gpt2_relu_jb_L6.json"
 if p.exists():
     out["runtime"] = load_json(p)

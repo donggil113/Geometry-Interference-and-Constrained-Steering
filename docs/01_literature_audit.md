@@ -787,7 +787,10 @@ Status key:
 N3 responded to the critic as follows. See `docs/02_protocol.md` and `docs/04_report.md`.
 
 **Adopted:**
-- the minimal decisive arm set, with the extended arms (SAE-TS, FGAA, COAST, S&P, RePS) deferred
+- the minimal decisive arm set, with the extended arms (SAE-TS, FGAA, COAST, S&P, RePS) deferred.
+  **Exception:** the Err(h)-clamping arm in the critic's minimal set was *not* run. Neither were the
+  other §9 requirements listed in `docs/04_report.md` §9 item 9 (P3 SAE-A / output-score selection,
+  P4 CE/KL matching, P7–P12 extras, the N15 mediation test).
 - norm-matched random SAE decoder rows
 - a count-matched random-protected-set projection control
 - a pre-registered T and P construction
@@ -799,7 +802,8 @@ N3 responded to the critic as follows. See `docs/02_protocol.md` and `docs/04_re
 - a timestamped pre-registration commit
 - geometry-predictor baselines for H2: max decoder cosine and neighbor density
 
-**Not feasible here, and stated as limitations:**
+**Not feasible here, and stated as limitations:** (the full list of audit requirements that were not
+executed is in `docs/04_report.md` §9 item 9)
 - the gpt-4o-mini judge and the Gemma-2-2B-IT AxBench reproduction (no API key, gated model, CPU only)
 - SAE-TS / FGAA / COAST / RePS
 - the Braun and Billa (LAP) predictors
@@ -810,6 +814,10 @@ N3 responded to the critic as follows. See `docs/02_protocol.md` and `docs/04_re
 
 ## Missing work
 All entries below were confirmed on arXiv abs pages or official pages during this pass. Unless a section is named, each claim comes from the abstract.
+
+> *Post-hoc note.* These entries were found after §2 and §4 were written and are not folded into
+> those tables. `docs/04_report.md` §10 positions the N3 results against the most relevant of them
+> (2603.18353, 2609.13072, 2606.24964, AlphaEdit 2410.02355).
 
 - **The six papers in §1.4 exist and can be verified, so the reason given for excluding them no longer holds.** Their arXiv IDs match these titles:
   - 2608.28806, *Enhancing SAE-based Steering via Neighbor Integrated Feature Selection* (Liu, Wang, Zou). Useful steering features are spread across neighbour groups created by feature splitting. https://arxiv.org/abs/2608.28806

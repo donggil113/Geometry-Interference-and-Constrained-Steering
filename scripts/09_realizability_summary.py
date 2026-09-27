@@ -34,7 +34,9 @@ for setting in sys.argv[1:]:
         for flag in ["eq_rank_full", "qp_feasible", "qp_converged", "qp_within_budget", "lin_within_budget", "dec_within_budget",
                      "topk_structural_conflict", "gn_T_reached"]:
             if flag in sub:
-                s["frac_" + flag] = float(sub[flag].astype(float).mean())
+                # intent-to-treat: undetermined (None/NaN) rows count as NOT satisfying the flag
+                s["frac_" + flag] = float((sub[flag] == True).mean())  # noqa: E712
+                s["frac_" + flag + "_undetermined"] = float(sub[flag].isna().mean())
         if "qp_check_P_err" in sub:
             s["max_qp_check_T_err"] = float(sub["qp_check_T_err"].max())
             s["max_qp_check_P_err"] = float(sub["qp_check_P_err"].max())

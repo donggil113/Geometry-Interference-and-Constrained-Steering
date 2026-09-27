@@ -1,6 +1,6 @@
 # N3 protocol (pre-registered before any held-out run)
 
-> **Reading note, added after the held-out run.** §7 (frozen decisions and amendments A1–A5) supersedes
+> **Reading note, added after the held-out run.** §7 (frozen decisions and amendments A1–A6) supersedes
 > the original plan in §3 and §6. Specifically, §7 adds the entity family (16 held-out concepts, not 8),
 > the concept-level sign-flip test with Holm correction, the absolute fluency guard, and H2 over 24
 > concepts. The H1 decision was NO_GO under **both** the §6 and the §7 rules.
@@ -154,5 +154,15 @@ SAE, after the centring fix.
   - Primary diagnostic: `c_qp_rel`.
   - κ was found degenerate (between-concept CV ≈ 0.02–0.04; `docs/03_realizability.md`), so it cannot
     be the primary diagnostic.
+
+### Amendment recorded after the held-out run (the change itself was made at freeze)
+
+- **A6.** The H2 outcome is the held-out ΔC of `dec_proj` (the primary corrected method), not of
+  `dec` as §6 states. The change was made when `configs/protocol.json` was frozen
+  (`h2.outcome_method = dec_proj`) but was not written up here at the time.
+  - Under the §6 outcome (`dec`), the primary diagnostic gives ρ = +0.07 (n = 24;
+    `results/analysis/report_numbers.json`, key `h2_gpt2_relu_jb_L6_dec_outcome`). Under the frozen
+    outcome it gives ρ = +0.05.
+  - H2 is not supported either way.
 
 The run tag and fingerprint are in `configs/protocol.json` (`frozen_at_commit`, `code_fingerprint`).
